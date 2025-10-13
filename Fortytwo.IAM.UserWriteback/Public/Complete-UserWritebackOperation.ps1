@@ -41,7 +41,7 @@ function Complete-UserWritebackOperation {
 
             $Body = $Parameters | ConvertTo-Json -Depth 10
 
-            Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/$($Operation.Identity)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
+            Invoke-RestMethod -Uri "https://graph.microsoft.com/beta/users/$($Operation.Identity)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
 
             Write-Verbose "Patched Entra ID user '$($Operation.Identity)'."
         }
