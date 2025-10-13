@@ -1,7 +1,10 @@
 function Get-UserWritebackOperations {
     [CmdletBinding()]
 
-    Param()
+    Param(
+        [Parameter(Mandatory = $false)]
+        $AttributeOverrides = @{}
+    )
 
     Process {
         #region Get all users in the specified group from Entra ID
@@ -40,40 +43,51 @@ function Get-UserWritebackOperations {
 
         #region Join users from Entra ID and Active Directory and calculate required operations
         $EntraIDUsers | ForEach-Object {
+            $EntraIDUser = $_
             $ADUser = $null
-            if (!$ADUser -and $_.onPremisesSecurityIdentifier) {
-                $ADUser = $ADUsersMap[$_.onPremisesSecurityIdentifier]
+            if (!$ADUser -and $EntraIDUser.onPremisesSecurityIdentifier) {
+                $ADUser = $ADUsersMap[$EntraIDUser.onPremisesSecurityIdentifier]
                 if ($ADUser) {
-                    Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSecurityIdentifier."
+                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSecurityIdentifier."
                 }
             }
             
-            if (!$ADUser -and $_.onPremisesUserPrincipalName) {
-                $ADUser = $ADUsersMap[$_.onPremisesUserPrincipalName]
+            if (!$ADUser -and $EntraIDUser.onPremisesUserPrincipalName) {
+                $ADUser = $ADUsersMap[$EntraIDUser.onPremisesUserPrincipalName]
                 if ($ADUser) {
-                    Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesUserPrincipalName."
+                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesUserPrincipalName."
                 }
             }
 
-            if (!$ADUser -and $_.onPremisesSamAccountName) {
-                $ADUser = $ADUsersMap[$_.onPremisesSamAccountName]
+            if (!$ADUser -and $EntraIDUser.onPremisesSamAccountName) {
+                $ADUser = $ADUsersMap[$EntraIDUser.onPremisesSamAccountName]
                 if ($ADUser) {
-                    Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSamAccountName."
+                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSamAccountName."
                 }
             }
 
-            if (!$ADUser -and $_.userPrincipalName) {
-                $ADUser = $ADUsersMap[$_.userPrincipalName]
+            if (!$ADUser -and $EntraIDUser.userPrincipalName) {
+                $ADUser = $ADUsersMap[$EntraIDUser.userPrincipalName]
                 if ($ADUser) {
-                    Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using userPrincipalName."
+                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using userPrincipalName."
                 }
             }
 
             if (!$ADUser) {
-                Write-Verbose "No matching AD user found for Entra ID user $($_.userPrincipalName) ($($_.id)). This user will be created in Active Directory."
+                Write-Verbose "No matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)). This user will be created in Active Directory."
+
+                
+                New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters @{
+                    SamAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $null) : (New-Guid).ToString().Substring(0,18)
+                    UserPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.UserPrincipalName
+                    GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.GivenName
+                    Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.Surname
+                    DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
+                    Enabled           = $EntraIDUser.accountEnabled
+                }
             }
             else {
-                Write-Verbose "Matching AD user found for Entra ID user $($_.userPrincipalName) ($($_.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
+                Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
             }
         }
         #endregion

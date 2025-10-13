@@ -12,4 +12,26 @@ Connect-UserWriteback `
     -DefaultDestinationOU "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com" `
     -Verbose
 
-$Operations = Get-UserWritebackOperations -Verbose -Debug
+$sAMAccountName = {
+    [CmdletBinding()]
+    Param(
+        $EntraIDUser, 
+        $ADUser
+    ) 
+    
+    Process {
+        if($EntraIDUser.onPremisesSamAccountName) {
+            return $EntraIDUser.onPremisesSamAccountName
+        } else {
+            $Prefix = $EntraIDUser.UserPrincipalName.Split("@")[0]
+            if($Prefix.Length -gt 20) {
+                $Prefix = $Prefix.Substring(0,20)
+            }
+            return $Prefix -replace "^[^a-zA-Z]+", ""
+        }
+    } 
+}
+
+$Operations = Get-UserWritebackOperations -Verbose -Debug -AttributeOverrides @{
+    sAMAccountName = $sAMAccountName
+}
