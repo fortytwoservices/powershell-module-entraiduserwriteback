@@ -9,4 +9,5 @@ Add-EntraIDClientSecretAccessTokenProfile `
     
 Connect-UserWriteback `
     -GroupObjectId "e687aa72-455f-48f1-ade3-4232e8fa2849" `
-    -DefaultDestinationOU "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com"
+    -DefaultDestinationOU "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com" `
+    -Verbose
