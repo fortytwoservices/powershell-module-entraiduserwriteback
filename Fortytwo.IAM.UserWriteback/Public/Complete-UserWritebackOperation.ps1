@@ -13,7 +13,7 @@ function Complete-UserWritebackOperation {
             $Parameters = $Operation.Parameters
             $CreatedUser = New-ADUser -AccountPassword $Password @Parameters -Passthru
 
-            if ($CreatedUser.distinguishedName) {
+            if ($CreatedUser.DistinguishedName) {
                 Write-Verbose "Created new AD user '$($CreatedUser.SamAccountName)' with distinguished name '$($CreatedUser.DistinguishedName)'."
                 
                 $Body = @{
