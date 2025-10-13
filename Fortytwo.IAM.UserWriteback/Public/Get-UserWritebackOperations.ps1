@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties DisplayName, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID
+        $ADUsers = Get-ADUser -Filter * -Properties DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
@@ -48,9 +48,10 @@ function Get-UserWritebackOperations {
         $EntraIDUsers | ForEach-Object {
             $EntraIDUser = $_
             $ADUser = $null
+            $adminDescription = "userwriteback_$($EntraIDUser.id)"
             
             if (!$ADUser) {
-                $ADUser = $ADUsersMap["userwriteback_$($EntraIDUser.id)"]
+                $ADUser = $ADUsersMap[$adminDescription]
                 if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using adminDescription."
                 }
@@ -90,7 +91,7 @@ function Get-UserWritebackOperations {
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                     OtherAttributes   = @{
-                        adminDescription = "userwriteback_$($EntraIDUser.id)"; # Store the Entra ID user ID in adminDescription for tracking purposes
+                        adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
                     }
                 }
             }
