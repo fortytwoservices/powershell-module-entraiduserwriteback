@@ -17,7 +17,7 @@ function Get-UserWritebackOperations {
             $Uri = $Response.'@odata.nextLink'
         } while ($Uri)
 
-        if(!$EntraIDUsers) {
+        if (!$EntraIDUsers) {
             Write-Error "No users found in group with object ID '$Script:GroupObjectId' in Entra ID."
             return @()
         }
@@ -31,7 +31,9 @@ function Get-UserWritebackOperations {
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
-            $ADUsersMap[$ADUser.UserPrincipalName] = $ADUser
+            if ($ADUser.UserPrincipalName) {
+                $ADUsersMap[$ADUser.UserPrincipalName] = $ADUser
+            }
         }
         Write-Verbose "Found $($ADUsers.Count) users in Active Directory."
         #endregion
@@ -39,37 +41,38 @@ function Get-UserWritebackOperations {
         #region Join users from Entra ID and Active Directory and calculate required operations
         $EntraIDUsers | ForEach-Object {
             $ADUser = $null
-            if(!$ADUser -and $_.onPremisesSecurityIdentifier) {
+            if (!$ADUser -and $_.onPremisesSecurityIdentifier) {
                 $ADUser = $ADUsersMap[$_.onPremisesSecurityIdentifier]
-                if($ADUser) {
+                if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSecurityIdentifier."
                 }
             }
             
-            if(!$ADUser -and $_.onPremisesUserPrincipalName) {
+            if (!$ADUser -and $_.onPremisesUserPrincipalName) {
                 $ADUser = $ADUsersMap[$_.onPremisesUserPrincipalName]
-                if($ADUser) {
+                if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesUserPrincipalName."
                 }
             }
 
-            if(!$ADUser -and $_.onPremisesSamAccountName) {
+            if (!$ADUser -and $_.onPremisesSamAccountName) {
                 $ADUser = $ADUsersMap[$_.onPremisesSamAccountName]
-                if($ADUser) {
+                if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSamAccountName."
                 }
             }
 
-            if(!$ADUser -and $_.userPrincipalName) {
+            if (!$ADUser -and $_.userPrincipalName) {
                 $ADUser = $ADUsersMap[$_.userPrincipalName]
-                if($ADUser) {
+                if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($_.userPrincipalName) ($($_.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using userPrincipalName."
                 }
             }
 
-            if(!$ADUser) {
+            if (!$ADUser) {
                 Write-Verbose "No matching AD user found for Entra ID user $($_.userPrincipalName) ($($_.id)). This user will be created in Active Directory."
-            } else {
+            }
+            else {
                 Write-Verbose "Matching AD user found for Entra ID user $($_.userPrincipalName) ($($_.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
             }
         }
