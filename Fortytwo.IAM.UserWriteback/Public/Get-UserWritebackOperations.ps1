@@ -10,7 +10,7 @@ function Get-UserWritebackOperations {
         #region Get all users in the specified group from Entra ID
         Write-Verbose "Getting members of group with object ID '$Script:GroupObjectId' from Entra ID."
         $EntraIDUsers = @()
-        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members?`$select=id,displayName,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier&`$top=999"
+        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members?`$select=id,displayName,accountEnabled,givenName,surname,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier&`$top=999"
 
         do {
             $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile)
@@ -83,7 +83,7 @@ function Get-UserWritebackOperations {
                     GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.GivenName
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.Surname
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
-                    Enabled           = $EntraIDUser.accountEnabled
+                    Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
             }
             else {
