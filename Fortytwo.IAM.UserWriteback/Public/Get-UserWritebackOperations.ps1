@@ -85,6 +85,9 @@ function Get-UserWritebackOperations {
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.Surname
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
+                    OtherAttributes   = @{
+                        adminDescription = "userwriteback_$($EntraIDUser.id)"; # Store the Entra ID user ID in adminDescription for tracking purposes
+                    }
                 }
             }
             else {
