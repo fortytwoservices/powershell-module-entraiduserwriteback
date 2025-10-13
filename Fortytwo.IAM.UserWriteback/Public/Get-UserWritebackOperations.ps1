@@ -152,6 +152,19 @@ function Get-UserWritebackOperations {
         #region
         # Find AD users that are not in the Entra ID group and need to be disabled
         $EntraIDUserMap = $EntraIDUsers | Where-Object { $_.onPremisesSecurityIdentifier } | Group-Object -AsHashTable -Property onPremisesSecurityIdentifier
+
+        $ADUsers | 
+        Where-Object adminDescription -like "userwriteback_*" | 
+        ForEach-Object {
+            $ADUser = $_
+            if (-not $EntraIDUserMap.ContainsKey($ADUser.ObjectSID.ToString())) {
+                Write-Verbose "AD user '$($ADUser.SamAccountName)' ($($ADUser.ObjectSID)) is not in the Entra ID group and will be disabled in Active Directory."
+
+                New-UserWritebackOperation -Action Set-ADUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
+                    Enabled = $false
+                }
+            }
+        }
         #endregion
     }
 }
