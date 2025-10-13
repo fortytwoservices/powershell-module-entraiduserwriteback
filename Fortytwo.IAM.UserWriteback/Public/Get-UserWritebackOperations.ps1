@@ -166,6 +166,11 @@ function Get-UserWritebackOperations {
             if (-not $EntraIDUserMap.ContainsKey($ADUser.ObjectSID.ToString())) {
                 Write-Verbose "AD user '$($ADUser.SamAccountName)' ($($ADUser.ObjectSID)) is not in the Entra ID group and will be disabled in Active Directory."
 
+                if($ADUser.Enabled -eq $false) {
+                    Write-Debug "AD user '$($ADUser.SamAccountName)' ($($ADUser.ObjectSID)) is already disabled in Active Directory. No action required."
+                    return
+                }
+
                 New-UserWritebackOperation -Action Set-ADUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
                     Enabled = $false
                 }
