@@ -37,6 +37,9 @@ function Get-UserWritebackOperations {
             if ($ADUser.UserPrincipalName) {
                 $ADUsersMap[$ADUser.UserPrincipalName] = $ADUser
             }
+            if ($ADUser.adminDescription -and $ADUser.adminDescription -like "userwriteback_*") {
+                $ADUsersMap[$ADUser.adminDescription] = $ADUser
+            }
         }
         Write-Verbose "Found $($ADUsers.Count) users in Active Directory."
         #endregion
@@ -45,6 +48,14 @@ function Get-UserWritebackOperations {
         $EntraIDUsers | ForEach-Object {
             $EntraIDUser = $_
             $ADUser = $null
+            
+            if (!$ADUser) {
+                $ADUser = $ADUsersMap["userwriteback_$($EntraIDUser.id)"]
+                if ($ADUser) {
+                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using adminDescription."
+                }
+            }
+
             if (!$ADUser -and $EntraIDUser.onPremisesSecurityIdentifier) {
                 $ADUser = $ADUsersMap[$EntraIDUser.onPremisesSecurityIdentifier]
                 if ($ADUser) {
@@ -56,13 +67,6 @@ function Get-UserWritebackOperations {
                 $ADUser = $ADUsersMap[$EntraIDUser.onPremisesUserPrincipalName]
                 if ($ADUser) {
                     Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesUserPrincipalName."
-                }
-            }
-
-            if (!$ADUser -and $EntraIDUser.onPremisesSamAccountName) {
-                $ADUser = $ADUsersMap[$EntraIDUser.onPremisesSamAccountName]
-                if ($ADUser) {
-                    Write-Debug "Joined Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)) with AD user $($ADUser.SamAccountName) ($($ADUser.ObjectSID)) using onPremisesSamAccountName."
                 }
             }
 
