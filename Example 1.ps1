@@ -1,4 +1,4 @@
-Import-Module ../powershell-module-EntraIDAccessToken/EntraIDAccessToken -Force
+Import-Module EntraIDAccessToken -Force
 Import-Module .\Fortytwo.IAM.UserWriteback\ -Force
 
 $cs ??= Read-Host -AsSecureString
