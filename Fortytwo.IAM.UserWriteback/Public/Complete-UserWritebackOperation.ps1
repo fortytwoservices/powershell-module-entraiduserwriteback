@@ -16,6 +16,7 @@ function Complete-UserWritebackOperation {
             if ($CreatedUser.DistinguishedName) {
                 Write-Verbose "Created new AD user '$($CreatedUser.SamAccountName)' with distinguished name '$($CreatedUser.DistinguishedName)'."
                 
+                $CreatedUser = $CreatedUser | Get-ADUser -Properties DistinguishedName,SamAccountName,UserPrincipalName,ObjectSID
                 $Body = @{
                     onPremisesDistinguishedName  = $CreatedUser.DistinguishedName
                     onPremisesSamAccountName     = $CreatedUser.SamAccountName
