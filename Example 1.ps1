@@ -7,4 +7,6 @@ Add-EntraIDClientSecretAccessTokenProfile `
     -ClientId "55ffa0ca-c74f-4344-bf0e-af56ff30f920" `
     -ClientSecret $cs
     
-Connect-ChangeEmailAgent
+Connect-UserWriteback `
+    -GroupObjectId "e687aa72-455f-48f1-ade3-4232e8fa2849" `
+    -DefaultDestinationOU "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com"
