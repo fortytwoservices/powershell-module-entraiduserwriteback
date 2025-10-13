@@ -4,7 +4,7 @@ function New-UserWritebackOperation {
     Param(
         # The action to perform. Possible values are 'Create', 'Update', 'Delete'.
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Set-ADUser", "Remove-ADUser", "New-ADUser", "Rename-ADObject")]
+        [ValidateSet("Set-ADUser", "Remove-ADUser", "New-ADUser", "Rename-ADObject", "Patch Entra ID User")]
         [string]$Action,
 
         # The user object from Entra ID.

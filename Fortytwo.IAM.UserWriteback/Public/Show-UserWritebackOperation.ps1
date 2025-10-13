@@ -23,9 +23,10 @@ function Show-UserWritebackOperation {
         }
 
         $Methods = [ordered] @{
-            "Set-ADUser"    = 0
-            "Remove-ADUser" = 0
-            "New-ADUser"    = 0
+            "Set-ADUser"          = 0
+            "Remove-ADUser"       = 0
+            "New-ADUser"          = 0
+            "Patch Entra ID User" = 0
         }
     }
 
@@ -33,7 +34,7 @@ function Show-UserWritebackOperation {
         $Methods[$Operation.Action] += 1
 
         if ($Operation.Action -eq "Set-ADUser") {
-            Write-Host "$($PSStyle.Foreground.BrightRed)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+            Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
             
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
                 " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
@@ -49,6 +50,13 @@ function Show-UserWritebackOperation {
         elseif ($Operation.Action -eq "Remove-ADUser") {
             Write-Host "$($PSStyle.Foreground.Red)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
         }
+        elseif ($Operation.Action -eq "Patch Entra ID User") {
+            Write-Host "$($PSStyle.Foreground.Cyan)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+
+            $Operation.Parameters.GetEnumerator() | ForEach-Object {
+                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+            }
+        }
     }
 
     End {
@@ -61,6 +69,7 @@ function Show-UserWritebackOperation {
                 $Color = $_.Key -eq "Remove-ADUser" ? $PSStyle.Foreground.BrightRed : $Color
                 $Color = $_.Key -eq "New-ADUser" ? $PSStyle.Foreground.BrightGreen : $Color
                 $Color = $_.Key -eq "Set-ADUser" ? $PSStyle.Foreground.Yellow : $Color
+                $Color = $_.Key -eq "Patch Entra ID User" ? $PSStyle.Foreground.Cyan : $Color
 
                 Write-Host " - $($_.Value) x $($Color)$($_.Key)$($PSStyle.Reset)"
             }

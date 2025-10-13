@@ -76,7 +76,6 @@ function Get-UserWritebackOperations {
             if (!$ADUser) {
                 Write-Verbose "No matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)). This user will be created in Active Directory."
 
-                
                 New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters @{
                     Path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $null) : $Script:DefaultDestinationOU
                     Name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $null) : (New-Guid).ToString().Substring(0, 18)
@@ -91,7 +90,7 @@ function Get-UserWritebackOperations {
             else {
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
 
-                $CalculatedAttributes = @{
+                $CalculatedActiveDirectoryAttributes = @{
                     UserPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
                     GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
@@ -99,22 +98,49 @@ function Get-UserWritebackOperations {
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
-                $AttributeUpdates = @{}
-                $CalculatedAttributes.GetEnumerator() | ForEach-Object {
+                $ActiveDirectoryAttributeUpdates = @{}
+                $CalculatedActiveDirectoryAttributes.GetEnumerator() | ForEach-Object {
                     $Key = $_.Key
                     $Value = $_.Value
                     if ($ADUser.$Key -ne $Value) {
                         Write-Verbose "Attribute '$Key' differs between Entra ID user and AD user. Entra ID value: '$Value', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
-                        $AttributeUpdates[$Key] = $Value
+                        $ActiveDirectoryAttributeUpdates[$Key] = $Value
                     } else {
                         Write-Debug "Attribute '$Key' is the same between Entra ID user and AD user. Value: '$Value'."
                     }
                 }
 
-                if($AttributeUpdates.Count -gt 0) {
-                    New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $AttributeUpdates
+                if($ActiveDirectoryAttributeUpdates.Count -gt 0) {
+                    New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $ActiveDirectoryAttributeUpdates
                 } else {
                     Write-Verbose "No attribute updates required for AD user '$($ADUser.SamAccountName)'."
+                }
+
+                $CalculatedEntraIDAttributes = @{
+                    onPremisesDistinguishedName = $ADUser.DistinguishedName
+                    onPremisesSamAccountName    = $ADUser.SamAccountName
+                    onPremisesUserPrincipalName = $ADUser.UserPrincipalName
+                    onPremisesSecurityIdentifier = $ADUser.ObjectSID.ToString()
+                    onPremisesDomainName = ($ADUser.DistinguishedName.Split(",") | Where-Object { $_ -like "DC=*" } | ForEach-Object { $_.Substring(3) }) -join "."
+                }
+
+                $EntraIDAttributeUpdates = @{}
+                $CalculatedEntraIDAttributes.GetEnumerator() | ForEach-Object {
+                    $Key = $_.Key
+                    $Value = $_.Value
+                    if ($EntraIDUser.$Key -ne $Value) {
+                        Write-Warning "Attribute '$Key' differs between AD user and Entra ID user. AD value: '$Value', Entra ID value: '$($EntraIDUser.$Key)'. Please update this attribute in Entra ID."
+                        $EntraIDAttributeUpdates[$Key] = $Value
+                    } else {
+                        Write-Debug "Attribute '$Key' is the same between AD user and Entra ID user. Value: '$Value'."
+                    }
+                }
+
+                if($EntraIDAttributeUpdates.Count -gt 0) {
+                    Write-Verbose "Entra ID user '$($EntraIDUser.userPrincipalName)' ($($EntraIDUser.id)) needs updates"
+                    New-UserWritebackOperation -Action "Patch Entra ID User" -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $EntraIDUser.id -Parameters $EntraIDAttributeUpdates
+                } else {
+                    Write-Debug "No attribute updates required for Entra ID user '$($EntraIDUser.userPrincipalName)'."
                 }
             }
         }

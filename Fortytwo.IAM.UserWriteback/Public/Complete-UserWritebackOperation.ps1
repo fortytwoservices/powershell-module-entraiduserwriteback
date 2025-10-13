@@ -35,5 +35,15 @@ function Complete-UserWritebackOperation {
 
             Write-Verbose "Removed AD user '$($Operation.Identity)'."
         }
+        elseif ($Operation.Action -eq "Patch Entra ID User") {
+            $Operation | Show-UserWritebackOperation -Single
+            $Parameters = $Operation.Parameters
+
+            $Body = $Parameters | ConvertTo-Json -Depth 10
+
+            Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/$($Operation.Identity)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
+
+            Write-Verbose "Patched Entra ID user '$($Operation.Identity)'."
+        }
     }
 }
