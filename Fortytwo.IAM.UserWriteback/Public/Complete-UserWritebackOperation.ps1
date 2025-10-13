@@ -10,7 +10,8 @@ function Complete-UserWritebackOperation {
         if($Operation.Action -eq "New-ADUser") {
             $Operation | Show-UserWritebackOperation -Single
             $Password = ConvertTo-SecureString -String (New-Guid).ToString() -AsPlainText -Force
-            New-ADUser -AccountPassword $Password @$Operation.Parameters
+            $Parameters = $Operation.Parameters
+            New-ADUser -AccountPassword $Password @Parameters
         }
     }
 }
