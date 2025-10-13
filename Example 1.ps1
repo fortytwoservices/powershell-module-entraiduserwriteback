@@ -35,3 +35,5 @@ $sAMAccountName = {
 $Operations = Get-UserWritebackOperations -Verbose -Debug -AttributeOverrides @{
     sAMAccountName = $sAMAccountName
 }
+
+$Operations | Show-UserWritebackOperation

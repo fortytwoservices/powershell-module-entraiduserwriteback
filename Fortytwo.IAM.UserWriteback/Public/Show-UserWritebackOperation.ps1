@@ -1,0 +1,57 @@
+<#
+.SYNOPSIS
+Prints all planned operations to screen, including a summary over each attribute and method
+
+.EXAMPLE
+$Operations | Show-UserWritebackOperation
+#>
+function Show-UserWritebackOperation {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+
+    Param(
+        # The operation to show
+        [Parameter(ValueFromPipeline = $true)]
+        $Operation
+    )
+
+    Begin {
+        Write-Host "[group]Operations report"
+        $Methods = [ordered] @{
+            "Set-ADUser"    = 0
+            "Remove-ADUser" = 0
+            "New-ADUser"    = 0
+        }
+    }
+
+    Process {
+        $Methods[$Operation.Action] += 1
+
+        if ($Operation.Action -eq "Set-ADUser") {
+            Write-Host "$($PSStyle.Foreground.BrightRed)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+            
+            # $Operation.OldValues.GetEnumerator() | ForEach-Object {
+            #     " - {0,-30} : {1}" -f $_.Key, (($_.Key -in $JsonifiedAttributes -or ($_.Value -and $_.Value.GetType().IsArray)) ? (ConvertTo-Json $_.Value -Compress -Depth 10) : $_.Value) | Write-Host
+            # }
+        }
+        elseif ($Operation.Action -eq "New-ADUser") {
+            Write-Host "$($PSStyle.Foreground.Green)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+        }
+        elseif ($Operation.Action -eq "Remove-ADUser") {
+            Write-Host "$($PSStyle.Foreground.Red)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+        }
+    }
+
+    End {
+        Write-Host "[endgroup]"
+        
+        Write-Host "Operations summary:"
+        $Methods.GetEnumerator() | ForEach-Object {
+            $Color = $PSStyle.Foreground.Green
+            $Color = $_.Key -eq "Remove-ADUser" ? $PSStyle.Foreground.BrightRed : $Color
+            $Color = $_.Key -eq "New-ADUser" ? $PSStyle.Foreground.BrightGreen : $Color
+            $Color = $_.Key -eq "Set-ADUser" ? $PSStyle.Foreground.Yellow : $Color
+
+            Write-Host " - $($_.Value) x $($Color)$($_.Key)$($PSStyle.Reset)"
+        }
+    }
+}
