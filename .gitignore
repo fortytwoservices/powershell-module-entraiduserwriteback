@@ -1,0 +1,6 @@
+scim_artifacts/
+*.zip
+*.md.tmp
+.DS_Store
+.idea
+testing.ps1
