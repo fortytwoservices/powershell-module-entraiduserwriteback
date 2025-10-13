@@ -4,7 +4,7 @@ A module for completing email change requests from the Bytt.Email service into A
 
 | Metadata | Information |
 | --- | --- |
-| Version | 0.0.1 |
+| Version | 1.0.0 |
 | Required modules | EntraIDAccessToken |
 | Author | Marius Solbakken Mellum |
 | Company name | Fortytwo Technologies AS |
