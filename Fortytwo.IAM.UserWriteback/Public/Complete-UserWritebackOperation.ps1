@@ -15,7 +15,7 @@ function Complete-UserWritebackOperation {
 
             if ($CreatedUser.distinguishedName) {
                 Write-Verbose "Created new AD user '$($CreatedUser.SamAccountName)' with distinguished name '$($CreatedUser.DistinguishedName)'."
-
+                
                 $Body = @{
                     onPremisesDistinguishedName  = $CreatedUser.DistinguishedName
                     onPremisesSamAccountName     = $CreatedUser.SamAccountName
@@ -24,6 +24,7 @@ function Complete-UserWritebackOperation {
                     onPremisesDomainName         = ($CreatedUser.DistinguishedName.Split(",") | Where-Object { $_ -like "DC=*" } | ForEach-Object { $_.Substring(3) }) -join "."
                 } | ConvertTo-Json -Depth 10
 
+                Write-Verbose "Upating Entra ID user '$($Operation.EntraIDUser.id)' with on-premises attributes from the created user."
                 Invoke-RestMethod -Uri "https://graph.microsoft.com/beta/users/$($Operation.EntraIDUser.id)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
             }
             else {
