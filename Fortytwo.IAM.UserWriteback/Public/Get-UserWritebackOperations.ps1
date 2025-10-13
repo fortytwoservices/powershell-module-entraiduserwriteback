@@ -90,6 +90,32 @@ function Get-UserWritebackOperations {
             }
             else {
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
+
+                $CalculatedAttributes = @{
+                    UserPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                    GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
+                    Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
+                    DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
+                    Enabled           = $EntraIDUser.accountEnabled ?? $false
+                }
+
+                $AttributeUpdates = @{}
+                $CalculatedAttributes.GetEnumerator() | ForEach-Object {
+                    $Key = $_.Key
+                    $Value = $_.Value
+                    if ($ADUser.$Key -ne $Value) {
+                        Write-Verbose "Attribute '$Key' differs between Entra ID user and AD user. Entra ID value: '$Value', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
+                        $AttributeUpdates[$Key] = $Value
+                    } else {
+                        Write-Debug "Attribute '$Key' is the same between Entra ID user and AD user. Value: '$Value'."
+                    }
+                }
+
+                if($AttributeUpdates.Count -gt 0) {
+                    New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $AttributeUpdates
+                } else {
+                    Write-Verbose "No attribute updates required for AD user '$($ADUser.SamAccountName)'."
+                }
             }
         }
         #endregion
