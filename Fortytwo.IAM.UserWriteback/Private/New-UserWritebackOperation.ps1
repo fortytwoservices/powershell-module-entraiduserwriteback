@@ -17,11 +17,16 @@ function New-UserWritebackOperation {
 
         # A hashtable of parameters required for the operation.
         [Parameter(Mandatory = $false)]
-        [hashtable]$Parameters
+        [hashtable]$Parameters,
+
+        # The identity of the object to operate on (e.g. sAMAccountName or DistinguishedName).
+        [Parameter(Mandatory = $false)]
+        [string]$Identity
     )
 
     Process {
         return [PSCustomObject]@{
+            Identity    = $Identity
             Action      = $Action
             EntraIDUser = $EntraIDUser
             ADUser      = $ADUser

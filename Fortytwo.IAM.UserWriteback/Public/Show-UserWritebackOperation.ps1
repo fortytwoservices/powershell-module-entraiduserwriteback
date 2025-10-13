@@ -29,12 +29,16 @@ function Show-UserWritebackOperation {
         if ($Operation.Action -eq "Set-ADUser") {
             Write-Host "$($PSStyle.Foreground.BrightRed)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
             
-            # $Operation.OldValues.GetEnumerator() | ForEach-Object {
-            #     " - {0,-30} : {1}" -f $_.Key, (($_.Key -in $JsonifiedAttributes -or ($_.Value -and $_.Value.GetType().IsArray)) ? (ConvertTo-Json $_.Value -Compress -Depth 10) : $_.Value) | Write-Host
-            # }
+            $Operation.Parameters.GetEnumerator | ForEach-Object {
+                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+            }
         }
         elseif ($Operation.Action -eq "New-ADUser") {
             Write-Host "$($PSStyle.Foreground.Green)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+
+            $Operation.Parameters.GetEnumerator | ForEach-Object {
+                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+            }
         }
         elseif ($Operation.Action -eq "Remove-ADUser") {
             Write-Host "$($PSStyle.Foreground.Red)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
