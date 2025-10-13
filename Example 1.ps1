@@ -37,3 +37,7 @@ $Operations = Get-UserWritebackOperations -Verbose -Debug -AttributeOverrides @{
 }
 
 $Operations | Show-UserWritebackOperation
+
+Read-Host "Press Enter to continue..."
+
+$Operations | Complete-UserWritebackOperation -Verbose
