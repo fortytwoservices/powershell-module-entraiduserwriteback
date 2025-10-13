@@ -157,6 +157,7 @@ function Get-UserWritebackOperations {
         #region
         # Find AD users that are not in the Entra ID group and need to be disabled
         $EntraIDUserMap = $EntraIDUsers | Where-Object { $_.onPremisesSecurityIdentifier } | Group-Object -AsHashTable -Property onPremisesSecurityIdentifier
+        $EntraIDUserMap ??= @{}
 
         $ADUsers | 
         Where-Object adminDescription -like "userwriteback_*" | 
