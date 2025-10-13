@@ -16,7 +16,15 @@ function Complete-UserWritebackOperation {
             if ($CreatedUser.distinguishedName) {
                 Write-Verbose "Created new AD user '$($CreatedUser.SamAccountName)' with distinguished name '$($CreatedUser.DistinguishedName)'."
 
-                # TODO: UPDATE ENTRA ID USER HERE?
+                $Body = @{
+                    onPremisesDistinguishedName  = $CreatedUser.DistinguishedName
+                    onPremisesSamAccountName     = $CreatedUser.SamAccountName
+                    onPremisesUserPrincipalName  = $CreatedUser.UserPrincipalName
+                    onPremisesSecurityIdentifier = $CreatedUser.ObjectSID.ToString()
+                    onPremisesDomainName         = ($CreatedUser.DistinguishedName.Split(",") | Where-Object { $_ -like "DC=*" } | ForEach-Object { $_.Substring(3) }) -join "."
+                } | ConvertTo-Json -Depth 10
+
+                Invoke-RestMethod -Uri "https://graph.microsoft.com/beta/users/$($Operation.EntraIDUser.id)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
             }
             else {
                 Write-Warning "Failed to create new AD user with parameters: $($Parameters | Out-String)"
