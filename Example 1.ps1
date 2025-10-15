@@ -38,6 +38,11 @@ $Operations = Get-UserWritebackOperations -Verbose -Debug -AttributeOverrides @{
 
 $Operations | Show-UserWritebackOperation
 
+if($Operations.Count -eq 0) {
+    Write-Host -ForegroundColor Yellow "No operations to perform."
+    return
+}
+
 Read-Host "Press Enter to continue..."
 
 $Operations | Complete-UserWritebackOperation -Verbose
