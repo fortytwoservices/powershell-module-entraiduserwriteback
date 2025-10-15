@@ -105,6 +105,16 @@ function Get-UserWritebackOperations {
                 }
             }
             else {
+                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.UserPrincipalName
+                if($Name -cne $ADUser.Name) {
+                    Write-Verbose "Attribute 'Name' differs between Entra ID user and AD user. Entra ID value: '$Name', AD value: '$($ADUser.Name)'. This attribute will be updated in Active Directory."
+                    New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
+                        Name = $Name
+                    }
+                } else {
+                    Write-Debug "Attribute 'Name' is the same between Entra ID user and AD user. Value: '$Name'."
+                }
+                
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
 
                 $CalculatedActiveDirectoryAttributes = @{
