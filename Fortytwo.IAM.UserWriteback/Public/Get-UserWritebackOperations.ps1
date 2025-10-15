@@ -146,7 +146,7 @@ function Get-UserWritebackOperations {
                     Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
                     Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
-                    OtherAttributes   = @{
+                    Replace   = @{
                         employeeType = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeType
                         employeeId   = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeId
                     }
@@ -156,19 +156,19 @@ function Get-UserWritebackOperations {
                 $CalculatedActiveDirectoryAttributes.GetEnumerator() | ForEach-Object {
                     $Key = $_.Key
                     $Value = $_.Value
-                    if ($Key -eq "OtherAttributes") {
+                    if ($Key -in "Replace") {
                         $_.Value.GetEnumerator() | ForEach-Object {
                             $SubKey = $_.Key
                             $SubValue = $_.Value
                             if ($ADUser.$SubKey -ne $SubValue) {
-                                Write-Verbose "Attribute 'OtherAttributes.$SubKey' differs between Entra ID user and AD user. Entra ID value: '$SubValue', AD value: '$($ADUser.$SubKey)'. This attribute will be updated in Active Directory."
-                                if (-not $ActiveDirectoryAttributeUpdates.ContainsKey("OtherAttributes")) {
-                                    $ActiveDirectoryAttributeUpdates["OtherAttributes"] = @{}
+                                Write-Verbose "Attribute '$Key.$SubKey' differs between Entra ID user and AD user. Entra ID value: '$SubValue', AD value: '$($ADUser.$SubKey)'. This attribute will be updated in Active Directory."
+                                if (-not $ActiveDirectoryAttributeUpdates.ContainsKey($Key)) {
+                                    $ActiveDirectoryAttributeUpdates[$Key] = @{}
                                 }
-                                $ActiveDirectoryAttributeUpdates["OtherAttributes"][$SubKey] = $SubValue
+                                $ActiveDirectoryAttributeUpdates[$Key][$SubKey] = $SubValue
                             }
                             else {
-                                Write-Debug "Attribute 'OtherAttributes.$SubKey' is the same between Entra ID user and AD user. Value: '$SubValue'."
+                                Write-Debug "Attribute '$SubKey' is the same between Entra ID user and AD user. Value: '$SubValue'."
                             }
                         }
                     }
