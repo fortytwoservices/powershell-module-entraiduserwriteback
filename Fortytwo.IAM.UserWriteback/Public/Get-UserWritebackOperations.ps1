@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties enabled,DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID
+        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, physicalDeliveryOfficeName, title, mail, mobile
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
@@ -89,6 +89,9 @@ function Get-UserWritebackOperations {
                     GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.GivenName
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.Surname
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
+                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mobilePhone
+                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.companyName
+                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.department
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                     OtherAttributes   = @{
                         adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
@@ -103,6 +106,9 @@ function Get-UserWritebackOperations {
                     GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
+                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mobilePhone
+                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.companyName
+                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.department
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
@@ -113,23 +119,25 @@ function Get-UserWritebackOperations {
                     if ($ADUser.$Key -ne $Value) {
                         Write-Verbose "Attribute '$Key' differs between Entra ID user and AD user. Entra ID value: '$Value', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
                         $ActiveDirectoryAttributeUpdates[$Key] = $Value
-                    } else {
+                    }
+                    else {
                         Write-Debug "Attribute '$Key' is the same between Entra ID user and AD user. Value: '$Value'."
                     }
                 }
 
-                if($ActiveDirectoryAttributeUpdates.Count -gt 0) {
+                if ($ActiveDirectoryAttributeUpdates.Count -gt 0) {
                     New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $ActiveDirectoryAttributeUpdates
-                } else {
+                }
+                else {
                     Write-Verbose "No attribute updates required for AD user '$($ADUser.SamAccountName)'."
                 }
 
                 $CalculatedEntraIDAttributes = @{
-                    onPremisesDistinguishedName = $ADUser.DistinguishedName
-                    onPremisesSamAccountName    = $ADUser.SamAccountName
-                    onPremisesUserPrincipalName = $ADUser.UserPrincipalName
+                    onPremisesDistinguishedName  = $ADUser.DistinguishedName
+                    onPremisesSamAccountName     = $ADUser.SamAccountName
+                    onPremisesUserPrincipalName  = $ADUser.UserPrincipalName
                     onPremisesSecurityIdentifier = $ADUser.ObjectSID.ToString()
-                    onPremisesDomainName = ($ADUser.DistinguishedName.Split(",") | Where-Object { $_ -like "DC=*" } | ForEach-Object { $_.Substring(3) }) -join "."
+                    onPremisesDomainName         = ($ADUser.DistinguishedName.Split(",") | Where-Object { $_ -like "DC=*" } | ForEach-Object { $_.Substring(3) }) -join "."
                 }
 
                 $EntraIDAttributeUpdates = @{}
@@ -139,15 +147,17 @@ function Get-UserWritebackOperations {
                     if ($EntraIDUser.$Key -ne $Value) {
                         Write-Warning "Attribute '$Key' differs between AD user and Entra ID user. AD value: '$Value', Entra ID value: '$($EntraIDUser.$Key)'. Please update this attribute in Entra ID."
                         $EntraIDAttributeUpdates[$Key] = $Value
-                    } else {
+                    }
+                    else {
                         Write-Debug "Attribute '$Key' is the same between AD user and Entra ID user. Value: '$Value'."
                     }
                 }
 
-                if($EntraIDAttributeUpdates.Count -gt 0) {
+                if ($EntraIDAttributeUpdates.Count -gt 0) {
                     Write-Verbose "Entra ID user '$($EntraIDUser.userPrincipalName)' ($($EntraIDUser.id)) needs updates"
                     New-UserWritebackOperation -Action "Patch Entra ID User" -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $EntraIDUser.id -Parameters $EntraIDAttributeUpdates
-                } else {
+                }
+                else {
                     Write-Debug "No attribute updates required for Entra ID user '$($EntraIDUser.userPrincipalName)'."
                 }
             }
@@ -166,7 +176,7 @@ function Get-UserWritebackOperations {
             if (-not $EntraIDUserMap.ContainsKey($ADUser.ObjectSID.ToString())) {
                 Write-Verbose "AD user '$($ADUser.SamAccountName)' ($($ADUser.ObjectSID)) is not in the Entra ID group and will be disabled in Active Directory."
 
-                if($ADUser.Enabled -eq $false) {
+                if ($ADUser.Enabled -eq $false) {
                     Write-Debug "AD user '$($ADUser.SamAccountName)' ($($ADUser.ObjectSID)) is already disabled in Active Directory. No action required."
                     return
                 }
