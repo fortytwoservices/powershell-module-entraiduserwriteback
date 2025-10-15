@@ -10,7 +10,7 @@ function Get-UserWritebackOperations {
         #region Get all users in the specified group from Entra ID
         Write-Verbose "Getting members of group with object ID '$Script:GroupObjectId' from Entra ID."
         $EntraIDUsers = @()
-        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members/microsoft.graph.user?`$select=id,displayName,accountEnabled,givenName,surname,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone,jobtitle,city,mail&`$top=999&`$expand=manager(`$select=id,onPremisesDistinguishedName,onPremisesDomainName)"
+        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members/microsoft.graph.user?`$select=id,displayName,accountEnabled,givenName,surname,officeLocation,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone,jobtitle,city,mail&`$top=999&`$expand=manager(`$select=id,onPremisesDistinguishedName,onPremisesDomainName)"
 
         do {
             $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile)
@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, physicalDeliveryOfficeName, title, mobilephone, city, emailaddress
+        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, office, title, mobilephone, city, emailaddress
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
@@ -97,6 +97,7 @@ function Get-UserWritebackOperations {
                     EmailAddress      = $AttributeOverrides.ContainsKey("emailAddress") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["emailAddress"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mail
                     City              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.city
                     Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
+                    Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.officeLocation
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                     OtherAttributes   = @{
                         adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
@@ -118,6 +119,7 @@ function Get-UserWritebackOperations {
                     EmailAddress      = $AttributeOverrides.ContainsKey("emailAddress") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["emailAddress"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mail
                     City              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.city
                     Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
+                    Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
