@@ -26,6 +26,8 @@ function Show-UserWritebackOperation {
             "Set-ADUser"          = 0
             "Remove-ADUser"       = 0
             "New-ADUser"          = 0
+            "Rename-ADObject"     = 0
+            "Move-ADObject"       = 0
             "Patch Entra ID User" = 0
         }
     }
@@ -37,14 +39,30 @@ function Show-UserWritebackOperation {
             Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
             
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                if ($_.Key -eq "OtherAttributes") {
+                    Write-Host " - OtherAttributes:"
+                    $_.Value.GetEnumerator() | ForEach-Object {
+                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    }
+                }
+                else {
+                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                }
             }
         }
         elseif ($Operation.Action -eq "New-ADUser") {
             Write-Host "$($PSStyle.Foreground.Green)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
 
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                if ($_.Key -eq "OtherAttributes") {
+                    Write-Host " - OtherAttributes:"
+                    $_.Value.GetEnumerator() | ForEach-Object {
+                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    }
+                }
+                else {
+                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                }
             }
         }
         elseif ($Operation.Action -eq "Remove-ADUser") {
@@ -69,6 +87,8 @@ function Show-UserWritebackOperation {
                 $Color = $_.Key -eq "Remove-ADUser" ? $PSStyle.Foreground.BrightRed : $Color
                 $Color = $_.Key -eq "New-ADUser" ? $PSStyle.Foreground.BrightGreen : $Color
                 $Color = $_.Key -eq "Set-ADUser" ? $PSStyle.Foreground.Yellow : $Color
+                $Color = $_.Key -eq "Rename-ADObject" ? $PSStyle.Foreground.Magenta : $Color
+                $Color = $_.Key -eq "Move-ADObject" ? $PSStyle.Foreground.Blue : $Color
                 $Color = $_.Key -eq "Patch Entra ID User" ? $PSStyle.Foreground.Cyan : $Color
 
                 Write-Host " - $($_.Value) x $($Color)$($_.Key)$($PSStyle.Reset)"
