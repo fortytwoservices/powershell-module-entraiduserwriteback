@@ -10,7 +10,7 @@ function Get-UserWritebackOperations {
         #region Get all users in the specified group from Entra ID
         Write-Verbose "Getting members of group with object ID '$Script:GroupObjectId' from Entra ID."
         $EntraIDUsers = @()
-        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members?`$select=id,displayName,accountEnabled,givenName,surname,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone&`$top=999"
+        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members?`$select=id,displayName,accountEnabled,givenName,surname,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone,jobtitle&`$top=999&`$expand=manager(`$select=id,onPremisesDistinguishedName,onPremisesDomainName)"
 
         do {
             $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile)
@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, physicalDeliveryOfficeName, title, mail, mobile
+        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, physicalDeliveryOfficeName, title, mail, mobilephone
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
@@ -92,6 +92,7 @@ function Get-UserWritebackOperations {
                     MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mobilePhone
                     Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.companyName
                     Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.department
+                    Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.jobTitle
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                     OtherAttributes   = @{
                         adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
@@ -106,9 +107,10 @@ function Get-UserWritebackOperations {
                     GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
                     Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
                     DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
-                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mobilePhone
-                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.companyName
-                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.department
+                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mobilePhone
+                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
+                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
+                    Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
