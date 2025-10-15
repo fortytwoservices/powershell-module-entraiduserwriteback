@@ -10,7 +10,7 @@ function Get-UserWritebackOperations {
         #region Get all users in the specified group from Entra ID
         Write-Verbose "Getting members of group with object ID '$Script:GroupObjectId' from Entra ID."
         $EntraIDUsers = @()
-        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members/microsoft.graph.user?`$select=id,displayName,accountEnabled,givenName,surname,officeLocation,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone,jobtitle,city,mail&`$top=999&`$expand=manager(`$select=id,onPremisesDistinguishedName,onPremisesDomainName)"
+        $Uri = "https://graph.microsoft.com/v1.0/groups/$Script:GroupObjectId/members/microsoft.graph.user?`$select=id,customSecurityAttributes,employeeid,employeetype,displayName,accountEnabled,givenName,surname,officeLocation,userPrincipalName,onPremisesDistinguishedName,onPremisesUserPrincipalName,onPremisesSamAccountName,onPremisesSecurityIdentifier,onPremisesDomainName,companyName,department,mobilePhone,jobtitle,city,mail&`$top=999&`$expand=manager(`$select=id,onPremisesDistinguishedName,onPremisesDomainName)"
 
         do {
             $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile)
@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, manager, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, office, title, mobilephone, city, emailaddress
+        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, manager, employeeid, employeetype, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, office, title, mobilephone, city, emailaddress, extensionattribute1, extensionattribute2, extensionattribute3, extensionattribute4, extensionattribute5, extensionattribute6, extensionattribute7, extensionattribute8, extensionattribute9, extensionattribute10, extensionattribute11, extensionattribute12, extensionattribute13, extensionattribute14, extensionattribute15
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
@@ -101,6 +101,8 @@ function Get-UserWritebackOperations {
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                     OtherAttributes   = @{
                         adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
+                        employeeType     = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeType
+                        employeeId       = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeId
                     }
                 }
             }
@@ -144,13 +146,33 @@ function Get-UserWritebackOperations {
                     Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
                     Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
+                    OtherAttributes   = @{
+                        employeeType = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeType
+                        employeeId   = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeId
+                    }
                 }
 
                 $ActiveDirectoryAttributeUpdates = @{}
                 $CalculatedActiveDirectoryAttributes.GetEnumerator() | ForEach-Object {
                     $Key = $_.Key
                     $Value = $_.Value
-                    if ($ADUser.$Key -ne $Value) {
+                    if ($Key -eq "OtherAttributes") {
+                        $_.Value.GetEnumerator() | ForEach-Object {
+                            $SubKey = $_.Key
+                            $SubValue = $_.Value
+                            if ($ADUser.$SubKey -ne $SubValue) {
+                                Write-Verbose "Attribute 'OtherAttributes.$SubKey' differs between Entra ID user and AD user. Entra ID value: '$SubValue', AD value: '$($ADUser.$SubKey)'. This attribute will be updated in Active Directory."
+                                if (-not $ActiveDirectoryAttributeUpdates.ContainsKey("OtherAttributes")) {
+                                    $ActiveDirectoryAttributeUpdates["OtherAttributes"] = @{}
+                                }
+                                $ActiveDirectoryAttributeUpdates["OtherAttributes"][$SubKey] = $SubValue
+                            }
+                            else {
+                                Write-Debug "Attribute 'OtherAttributes.$SubKey' is the same between Entra ID user and AD user. Value: '$SubValue'."
+                            }
+                        }
+                    }
+                    elseif ($ADUser.$Key -ne $Value) {
                         Write-Verbose "Attribute '$Key' differs between Entra ID user and AD user. Entra ID value: '$Value', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
                         $ActiveDirectoryAttributeUpdates[$Key] = $Value
                     }
