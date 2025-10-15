@@ -39,8 +39,8 @@ function Show-UserWritebackOperation {
             Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
             
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                if ($_.Key -eq "OtherAttributes") {
-                    Write-Host " - OtherAttributes:"
+                if ($_.Key -eq "Replace") {
+                    Write-Host " - $($_.Key):"
                     $_.Value.GetEnumerator() | ForEach-Object {
                         "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
                     }
@@ -54,7 +54,7 @@ function Show-UserWritebackOperation {
             Write-Host "$($PSStyle.Foreground.Green)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
 
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                if ($_.Key -in "OtherAttributes","Replace") {
+                if ($_.Key -in "OtherAttributes") {
                     Write-Host " - $($_.Key):"
                     $_.Value.GetEnumerator() | ForEach-Object {
                         "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
