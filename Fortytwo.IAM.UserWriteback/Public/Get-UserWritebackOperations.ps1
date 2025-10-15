@@ -30,7 +30,7 @@ function Get-UserWritebackOperations {
 
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
-        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, manager, employeeid, employeetype, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, office, title, mobilephone, city, emailaddress, extensionattribute1, extensionattribute2, extensionattribute3, extensionattribute4, extensionattribute5, extensionattribute6, extensionattribute7, extensionattribute8, extensionattribute9, extensionattribute10, extensionattribute11, extensionattribute12, extensionattribute13, extensionattribute14, extensionattribute15
+        $ADUsers = Get-ADUser -Filter * -Properties enabled, DisplayName, manager, employeeid, employeetype, adminDescription, UserPrincipalName, SamAccountName, DistinguishedName, ObjectSID, givenName, sn, company, department, office, title, mobilephone, city, emailaddress
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
