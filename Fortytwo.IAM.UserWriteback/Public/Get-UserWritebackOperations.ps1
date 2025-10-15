@@ -38,7 +38,7 @@ function Get-UserWritebackOperations {
             1..15 | ForEach-Object { $Properties += "extensionAttribute$_" }
         }
 
-        $ADUsers = Get-ADUser -Filter * -Properties $Properties
+        $ADUsers = Get-ADUser -Filter * -Properties $Properties -ErrorAction Stop
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
