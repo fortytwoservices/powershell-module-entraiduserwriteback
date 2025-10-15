@@ -37,14 +37,30 @@ function Show-UserWritebackOperation {
             Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
             
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                if ($_.Key -eq "OtherAttributes") {
+                    Write-Host " - OtherAttributes:"
+                    $_.Value.GetEnumerator() | ForEach-Object {
+                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    }
+                }
+                else {
+                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                }
             }
         }
         elseif ($Operation.Action -eq "New-ADUser") {
             Write-Host "$($PSStyle.Foreground.Green)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
 
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
-                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                if ($_.Key -eq "OtherAttributes") {
+                    Write-Host " - OtherAttributes:"
+                    $_.Value.GetEnumerator() | ForEach-Object {
+                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    }
+                }
+                else {
+                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                }
             }
         }
         elseif ($Operation.Action -eq "Remove-ADUser") {
