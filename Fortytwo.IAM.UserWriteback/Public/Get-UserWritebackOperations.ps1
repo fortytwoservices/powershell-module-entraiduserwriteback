@@ -34,6 +34,7 @@ function Get-UserWritebackOperations {
         $ADUsersMap = @{}
         foreach ($ADUser in $ADUsers) {
             $ADUsersMap[$ADUser.ObjectSID.ToString()] = $ADUser
+            $ADUsersMap[$ADUser.DistinguishedName] = $ADUser
             if ($ADUser.UserPrincipalName) {
                 $ADUsersMap[$ADUser.UserPrincipalName] = $ADUser
             }
@@ -111,6 +112,7 @@ function Get-UserWritebackOperations {
                     Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
                     Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
                     Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
+                    Manager           = if ($EntraIDUser.manager -and $EntraIDUser.manager.onPremisesDistinguishedName -and $EntraIDUser.onPremisesDomainName -eq $EntraIDUser.manager.onPremisesDomainName) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
