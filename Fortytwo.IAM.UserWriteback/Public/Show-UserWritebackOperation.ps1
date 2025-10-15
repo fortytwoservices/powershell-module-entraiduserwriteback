@@ -27,6 +27,7 @@ function Show-UserWritebackOperation {
             "Remove-ADUser"       = 0
             "New-ADUser"          = 0
             "Rename-ADObject"     = 0
+            "Move-ADObject"       = 0
             "Patch Entra ID User" = 0
         }
     }
@@ -87,6 +88,7 @@ function Show-UserWritebackOperation {
                 $Color = $_.Key -eq "New-ADUser" ? $PSStyle.Foreground.BrightGreen : $Color
                 $Color = $_.Key -eq "Set-ADUser" ? $PSStyle.Foreground.Yellow : $Color
                 $Color = $_.Key -eq "Rename-ADObject" ? $PSStyle.Foreground.Magenta : $Color
+                $Color = $_.Key -eq "Move-ADObject" ? $PSStyle.Foreground.Blue : $Color
                 $Color = $_.Key -eq "Patch Entra ID User" ? $PSStyle.Foreground.Cyan : $Color
 
                 Write-Host " - $($_.Value) x $($Color)$($_.Key)$($PSStyle.Reset)"

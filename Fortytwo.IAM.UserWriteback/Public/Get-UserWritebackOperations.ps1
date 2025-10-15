@@ -105,14 +105,27 @@ function Get-UserWritebackOperations {
                 }
             }
             else {
-                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.UserPrincipalName
-                if($Name -cne $ADUser.Name) {
+                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                if ($Name -cne $ADUser.Name) {
                     Write-Verbose "Attribute 'Name' differs between Entra ID user and AD user. Entra ID value: '$Name', AD value: '$($ADUser.Name)'. This attribute will be updated in Active Directory."
                     New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.DistinguishedName -Parameters @{
                         NewName = $Name
                     }
-                } else {
+                }
+                else {
                     Write-Debug "Attribute 'Name' is the same between Entra ID user and AD user. Value: '$Name'."
+                }
+
+                $Path = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                $CurrentPath = "OU={0}" -f ($ADUser.DistinguishedName -split "OU=", 2)[1]
+                if ($Path -ne $CurrentPath) {
+                    Write-Verbose "The path differs AD and the calculated value. The object will be moved."
+                    New-UserWritebackOperation -Action Move-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.DistinguishedName -Parameters @{
+                        TargetPath = $Path
+                    }
+                }
+                else {
+                    Write-Debug "The object $($ADUser.DistinguishedName) is already in the correct place."
                 }
 
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
