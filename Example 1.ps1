@@ -41,7 +41,7 @@ $path = {
     ) 
     
     Process {
-        if ($EntraIDUser.givenName -eq 'Alma') {
+        if ($EntraIDUser.givenName?.Split(" ")[0] -eq 'Alma') {
             return "OU=VIPs,OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com"
         }
         else {
