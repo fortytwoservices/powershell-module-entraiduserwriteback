@@ -45,6 +45,12 @@ function Complete-UserWritebackOperation {
 
             Write-Verbose "Removed AD user '$($Operation.Identity)'."
         }
+        elseif ($Operation.Action -eq "Rename-ADObject") {
+            $Operation | Show-UserWritebackOperation -Single
+            Rename-ADObject -Identity $Operation.Identity -NewName $Operation.NewName -Confirm:$false
+
+            Write-Verbose "Renamed AD object '$($Operation.Identity)' to '$($Operation.NewName)'."
+        }
         elseif ($Operation.Action -eq "Patch Entra ID User") {
             $Operation | Show-UserWritebackOperation -Single
             $Parameters = $Operation.Parameters
@@ -54,6 +60,9 @@ function Complete-UserWritebackOperation {
             Invoke-RestMethod -Uri "https://graph.microsoft.com/beta/users/$($Operation.Identity)" -Method Patch -Headers (Get-EntraIDAccessTokenHeader -Profile $Script:AccessTokenProfile) -Body $Body -ContentType "application/json"
 
             Write-Verbose "Patched Entra ID user '$($Operation.Identity)'."
+        }
+        else {
+            Write-Error "Unknown operation action '$($Operation.Action)'."
         }
     }
 }
