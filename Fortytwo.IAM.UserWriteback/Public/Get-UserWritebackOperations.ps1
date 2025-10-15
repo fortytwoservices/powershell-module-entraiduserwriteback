@@ -112,7 +112,7 @@ function Get-UserWritebackOperations {
                     Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
                     Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
                     Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
-                    Manager           = if ($EntraIDUser.manager -and $EntraIDUser.manager.onPremisesDistinguishedName -and $EntraIDUser.onPremisesDomainName -eq $EntraIDUser.manager.onPremisesDomainName) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
+                    Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
                     Enabled           = $EntraIDUser.accountEnabled ?? $false
                 }
 
