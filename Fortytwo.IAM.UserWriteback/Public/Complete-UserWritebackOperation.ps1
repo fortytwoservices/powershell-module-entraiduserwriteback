@@ -50,7 +50,7 @@ function Complete-UserWritebackOperation {
             $Parameters = $Operation.Parameters
             Rename-ADObject -Identity $Operation.Identity @Parameters -Confirm:$false
 
-            Write-Verbose "Renamed AD object '$($Operation.Identity)' to '$($Operation.NewName)'."
+            Write-Verbose "Renamed AD object '$($Operation.Identity)' to '$($Operation.Parameters.NewName)'."
         }
         elseif ($Operation.Action -eq "Patch Entra ID User") {
             $Operation | Show-UserWritebackOperation -Single
