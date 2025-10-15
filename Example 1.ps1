@@ -1,3 +1,6 @@
+[CmdletBinding()]
+Param()
+
 Import-Module EntraIDAccessToken -Force
 Import-Module .\Fortytwo.IAM.UserWriteback\ -Force
 
