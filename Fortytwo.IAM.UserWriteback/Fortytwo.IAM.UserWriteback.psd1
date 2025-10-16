@@ -26,7 +26,7 @@
     Copyright         = '(c) Fortytwo Technologies AS'
 
     # Description of the functionality provided by this module
-    Description       = 'A module for completing email change requests from the Bytt.Email service into Active Directory or Entra ID / Exchange Online'
+    Description       = 'A module for synchronizing users from Entra ID into Active Directory, and writing onpremises* attributes back to Entra ID. Useful when certain users still require on-premises AD users, while all users have their SOA convert to Entra ID.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '7.2'
