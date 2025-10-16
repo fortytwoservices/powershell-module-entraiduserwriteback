@@ -156,7 +156,7 @@ function Get-UserWritebackOperations {
 
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
 
-                $Parameters = @{Replace = @{} }
+                $Parameters = @{}
                 $AllCalculatedAttributes.GetEnumerator() | ForEach-Object {
                     $Key = $_.Key
                     if ($Key -in "path", "name") {
@@ -170,6 +170,7 @@ function Get-UserWritebackOperations {
                                 $Parameters[$Key] = $_.Value
                             }
                             else {
+                                $Parameters.Replace ??= @{}
                                 $Parameters.Replace[$Key] = $_.Value
                             }
                         }
@@ -179,7 +180,7 @@ function Get-UserWritebackOperations {
                     }
                 }
 
-                if ($Parameters.Count -gt 1 -or $Parameters.Replace.Count -gt 0) {
+                if ($Parameters.Count -gt 0) {
                     New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $Parameters
                 }
                 else {
