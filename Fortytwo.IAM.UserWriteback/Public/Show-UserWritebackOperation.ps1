@@ -68,12 +68,26 @@ function Show-UserWritebackOperation {
         elseif ($Operation.Action -eq "Remove-ADUser") {
             Write-Host "$($PSStyle.Foreground.Red)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
         }
+        elseif ($Operation.Action -eq "Rename-ADObject") {
+            Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+            $Operation.Parameters.GetEnumerator() | ForEach-Object {
+                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+            }
+        }
+        elseif ($Operation.Action -eq "Move-ADObject") {
+            Write-Host "$($PSStyle.Foreground.Yellow)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
+            $Operation.Parameters.GetEnumerator() | ForEach-Object {
+                " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+            }
+        }
         elseif ($Operation.Action -eq "Patch Entra ID User") {
             Write-Host "$($PSStyle.Foreground.Cyan)$($Operation.Action)$($PSStyle.Reset) $($Operation.Identity)"
 
             $Operation.Parameters.GetEnumerator() | ForEach-Object {
                 " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
             }
+        } else {
+            Write-Warning "Unknown operation action '$($Operation.Action)'."
         }
     }
 
