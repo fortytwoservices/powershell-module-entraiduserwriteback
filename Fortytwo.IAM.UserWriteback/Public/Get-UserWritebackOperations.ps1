@@ -87,41 +87,48 @@ function Get-UserWritebackOperations {
                 }
             }
 
+            $AllCalculatedAttributes = @{
+                path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $Script:DefaultDestinationOU
+                name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : (New-Guid).ToString().Substring(0, 18)
+                userPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                givenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
+                surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
+                displayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
+                mobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mobilePhone
+                company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
+                department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
+                title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
+                mail              = $AttributeOverrides.ContainsKey("mail") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mail"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mail
+                city              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.city
+                manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
+                office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
+                enabled           = $EntraIDUser.accountEnabled ?? $false
+                employeeType      = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeType
+                employeeId        = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeId
+            }
+
+            if (!$Script:DisableExtensionAttributeMapping) {
+                1..15 | ForEach-Object {
+                    $Attr = "extensionAttribute$_"
+                    $AllCalculatedAttributes[$Attr] = $AttributeOverrides.ContainsKey($Attr) ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides[$Attr] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.onPremisesExtensionAttributes.$Attr
+                }
+            }
+
             if (!$ADUser) {
                 Write-Verbose "No matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)). This user will be created in Active Directory."
 
-                $OtherAttributes = @{
-                    adminDescription = $adminDescription # Store the Entra ID user ID in adminDescription for tracking purposes
-                    employeeType     = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeType
-                    employeeId       = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeId
-                }
-
-                if (!$Script:DisableExtensionAttributeMapping) {
-                    1..15 | ForEach-Object {
-                        $Attr = "extensionAttribute$_"
-                        $OtherAttributes[$Attr] = $AttributeOverrides.ContainsKey($Attr) ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides[$Attr] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.onPremisesExtensionAttributes.$Attr
+                $Parameters = @{OtherAttributes = @{adminDescription = $adminDescription } }
+                $AllCalculatedAttributes.GetEnumerator() | ForEach-Object {
+                    if ($_.Value -ne "NO-FLOW") {
+                        if ($_.Key -in "path", "name", "sAMAccountName", "userPrincipalName", "givenName", "surname", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
+                            $Parameters[$_.Key] = $_.Value
+                        }
+                        $Parameters.OtherAttributes[$_.Key] = $_.Value
                     }
                 }
 
-                New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters @{
-                    Path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $null) : $Script:DefaultDestinationOU
-                    Name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.UserPrincipalName
-                    SamAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $null) : (New-Guid).ToString().Substring(0, 18)
-                    UserPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.UserPrincipalName
-                    GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.GivenName
-                    Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.Surname
-                    DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.DisplayName
-                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mobilePhone
-                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.companyName
-                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.department
-                    Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.jobTitle
-                    EmailAddress      = $AttributeOverrides.ContainsKey("emailAddress") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["emailAddress"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.mail
-                    City              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.city
-                    Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
-                    Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.officeLocation
-                    Enabled           = $EntraIDUser.accountEnabled ?? $false
-                    OtherAttributes   = $OtherAttributes
-                }
+                New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters $Parameters
             }
             else {
                 $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
@@ -149,66 +156,28 @@ function Get-UserWritebackOperations {
 
                 Write-Verbose "Matching AD user found for Entra ID user $($EntraIDUser.userPrincipalName) ($($EntraIDUser.id)): $($ADUser.SamAccountName) ($($ADUser.ObjectSID))."
 
-                $Replace = @{
-                    employeeType = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeType
-                    employeeId   = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.employeeId
-                }
-
-                if (!$Script:DisableExtensionAttributeMapping) {
-                    1..15 | ForEach-Object {
-                        $Attr = "extensionAttribute$_"
-                        $Replace[$Attr] = $AttributeOverrides.ContainsKey($Attr) ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides[$Attr] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.onPremisesExtensionAttributes.$Attr
-                    }
-                }
-
-                $CalculatedActiveDirectoryAttributes = @{
-                    UserPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
-                    GivenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
-                    Surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
-                    DisplayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
-                    MobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mobilePhone
-                    Company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
-                    Department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
-                    Title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
-                    EmailAddress      = $AttributeOverrides.ContainsKey("emailAddress") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["emailAddress"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mail
-                    City              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.city
-                    Manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
-                    Office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
-                    Enabled           = $EntraIDUser.accountEnabled ?? $false
-                    Replace           = $Replace
-                }
-
-                $ActiveDirectoryAttributeUpdates = @{}
-                $CalculatedActiveDirectoryAttributes.GetEnumerator() | ForEach-Object {
+                $Parameters = @{Replace = @{} }
+                $AllCalculatedAttributes.GetEnumerator() | ForEach-Object {
                     $Key = $_.Key
-                    $Value = $_.Value
-                    if ($Key -in "Replace") {
-                        $_.Value.GetEnumerator() | ForEach-Object {
-                            $SubKey = $_.Key
-                            $SubValue = $_.Value
-                            if ($ADUser.$SubKey -ne $SubValue) {
-                                Write-Verbose "Attribute '$Key.$SubKey' differs between Entra ID user and AD user. Entra ID value: '$SubValue', AD value: '$($ADUser.$SubKey)'. This attribute will be updated in Active Directory."
-                                if (-not $ActiveDirectoryAttributeUpdates.ContainsKey($Key)) {
-                                    $ActiveDirectoryAttributeUpdates[$Key] = @{}
-                                }
-                                $ActiveDirectoryAttributeUpdates[$Key][$SubKey] = $SubValue
+                    if ($Key -in "path", "name") {
+                        return
+                    }
+
+                    if ($_.Value -ne "NO-FLOW") {
+                        if ($_.Value -ne $ADUser.$Key) {
+                            Write-Verbose "Attribute '$Key' differs between the calculated value and the AD user. Calculated value: '$($_.Value)', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
+                            if ($Key -in "sAMAccountName", "userPrincipalName", "givenName", "surname", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
+                                $Parameters[$Key] = $_.Value
                             }
-                            else {
-                                Write-Debug "Attribute '$SubKey' is the same between Entra ID user and AD user. Value: '$SubValue'."
-                            }
+                            $Parameters.Replace[$Key] = $_.Value
+                        } else {
+                            Write-Debug "Attribute '$Key' already has the correct calculated value of '$($_.Value)'."
                         }
                     }
-                    elseif ($ADUser.$Key -ne $Value) {
-                        Write-Verbose "Attribute '$Key' differs between Entra ID user and AD user. Entra ID value: '$Value', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
-                        $ActiveDirectoryAttributeUpdates[$Key] = $Value
-                    }
-                    else {
-                        Write-Debug "Attribute '$Key' is the same between Entra ID user and AD user. Value: '$Value'."
-                    }
                 }
 
-                if ($ActiveDirectoryAttributeUpdates.Count -gt 0) {
-                    New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $ActiveDirectoryAttributeUpdates
+                if ($Parameters.Count -gt 1 -or $Parameters.Replace.Count -gt 0) {
+                    New-UserWritebackOperation -Action Set-ADUser -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters $Parameters
                 }
                 else {
                     Write-Verbose "No attribute updates required for AD user '$($ADUser.SamAccountName)'."
