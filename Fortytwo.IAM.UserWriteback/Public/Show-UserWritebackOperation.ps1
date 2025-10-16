@@ -42,11 +42,11 @@ function Show-UserWritebackOperation {
                 if ($_.Key -eq "Replace") {
                     Write-Host " - $($_.Key):"
                     $_.Value.GetEnumerator() | ForEach-Object {
-                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                        "    - {0,-30} : {1}" -f $_.Key, ($_.Value ?? "<null>") | Write-Host
                     }
                 }
                 else {
-                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    " - {0,-30} : {1}" -f $_.Key, ($_.Value ?? "<null>") | Write-Host
                 }
             }
         }
@@ -57,11 +57,11 @@ function Show-UserWritebackOperation {
                 if ($_.Key -in "OtherAttributes") {
                     Write-Host " - $($_.Key):"
                     $_.Value.GetEnumerator() | ForEach-Object {
-                        "    - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                        "    - {0,-30} : {1}" -f $_.Key, ($_.Value ?? "<null>") | Write-Host
                     }
                 }
                 else {
-                    " - {0,-30} : {1}" -f $_.Key, $_.Value | Write-Host
+                    " - {0,-30} : {1}" -f $_.Key, ($_.Value ?? "<null>") | Write-Host
                 }
             }
         }
