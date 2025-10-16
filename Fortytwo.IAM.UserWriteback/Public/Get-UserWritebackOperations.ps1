@@ -31,7 +31,7 @@ function Get-UserWritebackOperations {
         #region Get all users from Active Directory
         Write-Verbose "Getting all users from Active Directory."
         $Properties = @(
-            "enabled", "DisplayName", "manager", "employeeid", "employeetype", "adminDescription", "UserPrincipalName", "SamAccountName", "DistinguishedName", "ObjectSID", "givenName", "sn", "company", "department", "office", "title", "mobilephone", "city", "emailaddress"
+            "enabled", "DisplayName", "manager", "employeeid", "employeetype", "adminDescription", "UserPrincipalName", "SamAccountName", "DistinguishedName", "ObjectSID", "givenName", "sn", "company", "department", "office", "title", "mobile", "city", "mail"
         )
 
         if (!$Script:DisableExtensionAttributeMapping) {
@@ -93,9 +93,9 @@ function Get-UserWritebackOperations {
                 sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : (New-Guid).ToString().Substring(0, 18)
                 userPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
                 givenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
-                surname           = $AttributeOverrides.ContainsKey("surname") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["surname"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
+                sn                = $AttributeOverrides.ContainsKey("sn") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sn"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
                 displayName       = $AttributeOverrides.ContainsKey("displayName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["displayName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.DisplayName
-                mobilePhone       = $AttributeOverrides.ContainsKey("mobilePhone") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobilePhone"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mobilePhone
+                mobile            = $AttributeOverrides.ContainsKey("mobile") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mobile"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mobilePhone
                 company           = $AttributeOverrides.ContainsKey("company") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["company"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.companyName
                 department        = $AttributeOverrides.ContainsKey("department") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["department"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.department
                 title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
@@ -121,7 +121,7 @@ function Get-UserWritebackOperations {
                 $Parameters = @{OtherAttributes = @{adminDescription = $adminDescription } }
                 $AllCalculatedAttributes.GetEnumerator() | ForEach-Object {
                     if ($_.Value -ne "NO-FLOW") {
-                        if ($_.Key -in "path", "name", "sAMAccountName", "userPrincipalName", "givenName", "surname", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
+                        if ($_.Key -in "path", "name", "sAMAccountName", "userPrincipalName", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
                             $Parameters[$_.Key] = $_.Value
                         }
                         $Parameters.OtherAttributes[$_.Key] = $_.Value
@@ -166,11 +166,14 @@ function Get-UserWritebackOperations {
                     if ($_.Value -ne "NO-FLOW") {
                         if ($_.Value -ne $ADUser.$Key) {
                             Write-Verbose "Attribute '$Key' differs between the calculated value and the AD user. Calculated value: '$($_.Value)', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
-                            if ($Key -in "sAMAccountName", "userPrincipalName", "givenName", "surname", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
+                            if ($Key -in "sAMAccountName", "userPrincipalName", "displayName", "mobile", "company", "department", "title", "city", "manager", "office", "enabled") {
                                 $Parameters[$Key] = $_.Value
                             }
-                            $Parameters.Replace[$Key] = $_.Value
-                        } else {
+                            else {
+                                $Parameters.Replace[$Key] = $_.Value
+                            }
+                        }
+                        else {
                             Write-Debug "Attribute '$Key' already has the correct calculated value of '$($_.Value)'."
                         }
                     }
