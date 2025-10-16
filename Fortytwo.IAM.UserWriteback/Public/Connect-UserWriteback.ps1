@@ -29,13 +29,18 @@ function Connect-UserWriteback {
 
         # Access token profile to use for authentication. the EntraIDAccessToken module must be installed and imported.
         [Parameter(Mandatory = $false)]
-        [string]$AccessTokenProfile = "default"
+        [string]$AccessTokenProfile = "default",
+
+        # Disable extensionAttribute1-15 mapping from Entra ID to Active Directory.
+        [Parameter(Mandatory = $false)]
+        [Switch] $DisableExtensionAttributeMapping
     )
 
     Process {
         $Script:AccessTokenProfile = $AccessTokenProfile
         $Script:GroupObjectId = $GroupObjectId
         $Script:DefaultDestinationOU = $DefaultDestinationOU
+        $Script:DisableExtensionAttributeMapping = $DisableExtensionAttributeMapping.IsPresent ?? $true
 
         if (!(Get-EntraIDAccessToken | Get-EntraIDAccessTokenHasRoles -Roles "user.read.all", "user.readwrite.all" -Any)) {
             Write-Warning "The access token profile '$AccessTokenProfile' does not have the required role 'user.read.all' or 'user.readwrite.all'. Please ensure the profile is correct and has the necessary permissions."        
