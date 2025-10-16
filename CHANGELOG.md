@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.0.0...v1.1.0) (2025-10-16)
+
+
+### Features
+
+* Add more attributes ([e896767](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/e8967671cc56a4bae08ef57f61c4a392fb6ca784))
+* Major improvements... ([e990680](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/e990680ca338b740cfdf7b6019dd0c51074a1bf0))
+
 ## [1.0.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v0.0.1...v1.0.0) (2025-10-13)
 
 
