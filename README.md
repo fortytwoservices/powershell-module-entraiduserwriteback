@@ -4,7 +4,7 @@ A module for synchronizing users from Entra ID into Active Directory, and writin
 
 | Metadata | Information |
 | --- | --- |
-| Version | 1.1.0 |
+| Version | 1.1.1 |
 | Required modules | EntraIDAccessToken |
 | Author | Marius Solbakken Mellum |
 | Company name | Fortytwo Technologies AS |
