@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.1.0...v1.1.1) (2025-10-16)
+
+
+### Bug Fixes
+
+* New module description ([dbfc211](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/dbfc2116db5a60320e93bd4de66c8237ee1b02a0))
+* New module description ([c3e6833](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/c3e68337cc2e6058f65743e738a8bb40c419af7b))
+
 ## [1.1.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.0.0...v1.1.0) (2025-10-16)
 
 
