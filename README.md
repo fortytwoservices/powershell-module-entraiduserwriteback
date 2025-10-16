@@ -1,6 +1,6 @@
 # Documentation for module Fortytwo.IAM.UserWriteback
 
-A module for completing email change requests from the Bytt.Email service into Active Directory or Entra ID / Exchange Online
+A module for synchronizing users from Entra ID into Active Directory, and writing onpremises* attributes back to Entra ID. Useful when certain users still require on-premises AD users, while all users have their SOA convert to Entra ID.
 
 | Metadata | Information |
 | --- | --- |
