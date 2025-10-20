@@ -14,6 +14,13 @@
         -ClientId "78f07963-ce55-4b23-b56a-2e13f2036d7f"
 
     Connect-UserWriteback
+
+.EXAMPLE
+    Connect-UserWriteback `
+        -GroupObjectId "e687aa72-455f-48f1-ade3-4232e8fa2849" `
+        -DefaultDestinationOU "OU=User writeback,DC=corp,DC=goodworkaround,DC=com" `
+        -DisableExtensionAttributeMapping `
+        -Verbose
 #>
 function Connect-UserWriteback {
     [CmdletBinding()]
@@ -31,7 +38,7 @@ function Connect-UserWriteback {
         [Parameter(Mandatory = $false)]
         [string]$AccessTokenProfile = "default",
 
-        # Disable extensionAttribute1-15 mapping from Entra ID to Active Directory.
+        # Disable extensionAttribute1-15 mapping from Entra ID to Active Directory. Useful if these attributes are not available in the on-premises AD schema.
         [Parameter(Mandatory = $false)]
         [Switch] $DisableExtensionAttributeMapping
     )

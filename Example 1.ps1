@@ -15,50 +15,8 @@ Connect-UserWriteback `
     -DefaultDestinationOU "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com" `
     -DisableExtensionAttributeMapping `
     -Verbose
-
-$sAMAccountName = {
-    [CmdletBinding()]
-    Param(
-        $EntraIDUser, 
-        $ADUser
-    ) 
     
-    Process {
-        if ($EntraIDUser.onPremisesSamAccountName) {
-            return $EntraIDUser.onPremisesSamAccountName
-        }
-        else {
-            $Prefix = $EntraIDUser.UserPrincipalName.Split("@")[0]
-            if ($Prefix.Length -gt 20) {
-                $Prefix = $Prefix.Substring(0, 20)
-            }
-            return $Prefix -replace "^[^a-zA-Z]+", ""
-        }
-    } 
-}
-
-$path = {
-    [CmdletBinding()]
-    Param(
-        $EntraIDUser, 
-        $ADUser
-    ) 
-    
-    Process {
-        if ($EntraIDUser.givenName?.Split(" ")[0] -eq 'Alma') {
-            return "OU=VIPs,OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com"
-        }
-        else {
-            return "OU=User writeback,DC=groupsoa,DC=goodworkaround,DC=com"
-        }
-    } 
-}
-
-$Operations = Get-UserWritebackOperations -Verbose -Debug -AttributeOverrides @{
-    sAMAccountName = $sAMAccountName
-    path           = $path
-}
-
+$Operations = Get-UserWritebackOperations -Verbose
 $Operations | Show-UserWritebackOperation
 
 if ($Operations.Count -eq 0) {
