@@ -34,14 +34,16 @@ Connect-UserWriteback `
 
 ### Get and complete operations
 
+The [```Get-UserWritebackOperations```](Documentation.md#get-userwritebackoperations) cmdlet is used to calculate the required operations in Entra ID and Active Directory.
+
 ```PowerShell
 $Operations = Get-UserWritebackOperations -Verbose
 $Operations | Show-UserWritebackOperation
-Read-Host "Press enter to complete"
-$Operations | Complete-UserWritebackOperation -Verbose
 ```
 
 ### Get and complete operations with custom attribute flow
+
+It is possible to add custom flows, by providing script blocks as a map to the ```AttributeOverrides```[```Get-UserWritebackOperations```](Documentation.md#get-userwritebackoperations) cmdlet.
 
 ```PowerShell
 $path = {
