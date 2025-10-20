@@ -2,6 +2,8 @@
 
 A module for synchronizing users from Entra ID into Active Directory, and writing onpremises* attributes back to Entra ID. Useful when certain users still require on-premises AD users, while all users have their SOA convert to Entra ID.
 
+See the project page for more information on usage: https://github.com/fortytwoservices/powershell-module-entraiduserwriteback
+
 | Metadata | Information |
 | --- | --- |
 | Version | 1.1.1 |
@@ -108,6 +110,15 @@ Add-EntraIDClientSecretAccessTokenProfile \`
 
 Connect-UserWriteback
 
+#### EXAMPLE 2
+```
+Connect-UserWriteback `
+    -GroupObjectId "e687aa72-455f-48f1-ade3-4232e8fa2849" `
+    -DefaultDestinationOU "OU=User writeback,DC=corp,DC=goodworkaround,DC=com" `
+    -DisableExtensionAttributeMapping `
+    -Verbose
+```
+
 ### PARAMETERS
 
 #### -GroupObjectId
@@ -158,6 +169,7 @@ Accept wildcard characters: False
 
 #### -DisableExtensionAttributeMapping
 Disable extensionAttribute1-15 mapping from Entra ID to Active Directory.
+Useful if these attributes are not available in the on-premises AD schema.
 
 ```yaml
 Type: SwitchParameter
