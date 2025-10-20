@@ -14,9 +14,9 @@ Install-Module -Scope CurrentUser -Name Fortytwo.IAM.UserWriteback
 
 The module is invoked in three steps:
 
-- Connect (```Connect-UserWriteback```) the module to Entra ID, which is using the [EntraIDAccesToken](https://www.powershellgallery.com/packages/EntraIDAccessToken) module.
-- Get required operations (```Get-UserWritebackOperations```), which will return a list of operations that must be completed in order to have AD and Entra ID users have the correct attribute values.
-- Complete the operations
+- Connect ([```Connect-UserWriteback```](Documentation.md#connect-userwriteback)) the module to Entra ID, which is using the [EntraIDAccessToken](https://www.powershellgallery.com/packages/EntraIDAccessToken) module.
+- Get required operations ([```Get-UserWritebackOperations```](Documentation.md#get-userwritebackoperations)), which will return a list of operations that must be completed in order to have AD and Entra ID users have the correct attribute values.
+- Complete the operations using ([```Complete-UserWritebackOperation```](Documentation.md#complete-userwritebackoperation))
 
 ## Examples
 
