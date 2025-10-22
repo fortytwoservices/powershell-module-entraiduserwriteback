@@ -6,7 +6,7 @@ See the project page for more information on usage: https://github.com/fortytwos
 
 | Metadata | Information |
 | --- | --- |
-| Version | 1.1.1 |
+| Version | 1.2.0 |
 | Required modules | EntraIDAccessToken |
 | Author | Marius Solbakken Mellum |
 | Company name | Fortytwo Technologies AS |
