@@ -1,0 +1,41 @@
+name: Run Windows Pester tests on Pull Requests
+
+on:
+  pull_request:
+
+jobs:
+  build-image:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        fetch-depth: 2
+        ref: ${{ github.event.pull_request.head.ref }}
+    - name: Pester tests
+      shell: pwsh
+      run: |
+        Invoke-Pester -ExcludeTagFilter "LinuxOnly"
+      env:
+        PESTERSECRET1: ${{ secrets.PESTERSECRET1 }}
+        PESTERSECRET2: ${{ secrets.PESTERSECRET2 }}
+        PESTERSECRET3: ${{ secrets.PESTERSECRET3 }}
+        PESTERSECRET4: ${{ secrets.PESTERSECRET4 }}
+        PESTERSECRET5: ${{ secrets.PESTERSECRET5 }}
+        PESTERSECRET6: ${{ secrets.PESTERSECRET6 }}
+        PESTERSECRET7: ${{ secrets.PESTERSECRET7 }}
+        PESTERSECRET8: ${{ secrets.PESTERSECRET8 }}
+        PESTERSECRET9: ${{ secrets.PESTERSECRET9 }}
+        PESTERSECRET10: ${{ secrets.PESTERSECRET10 }}
+        PESTERSECRET11: ${{ secrets.PESTERSECRET11 }}
+        PESTERSECRET12: ${{ secrets.PESTERSECRET12 }}
+        PESTERSECRET13: ${{ secrets.PESTERSECRET13 }}
+        PESTERSECRET14: ${{ secrets.PESTERSECRET14 }}
+        PESTERSECRET15: ${{ secrets.PESTERSECRET15 }}
+        PESTERSECRET16: ${{ secrets.PESTERSECRET16 }}
+        PESTERSECRET17: ${{ secrets.PESTERSECRET17 }}
+        PESTERSECRET18: ${{ secrets.PESTERSECRET18 }}
+        PESTERSECRET19: ${{ secrets.PESTERSECRET19 }}
