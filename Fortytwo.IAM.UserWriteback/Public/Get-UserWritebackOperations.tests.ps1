@@ -1,5 +1,5 @@
 BeforeAll {
-    Import-Module EntraIDAccessToken -Force
+    Install-Module EntraIDAccessToken -Force -Scope CurrentUser
     Add-EntraIDExternalAccessTokenProfile -AccessToken "dummy"
     $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru
     
