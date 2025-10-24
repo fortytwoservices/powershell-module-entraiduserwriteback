@@ -1,19 +1,18 @@
-
-function Get-ADUser {
-    Param(
-        $Filter,
-        $Identity,
-        $Properties
-    )
-
-    return
-}
-
 BeforeAll {
     Install-Module EntraIDAccessToken -Force -Scope CurrentUser
     Add-EntraIDExternalAccessTokenProfile -AccessToken "dummy"
-    $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru    
+    $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru -Global 
+
+    # Mocking Active Directory module
+    $MockupModule = New-Module -ScriptBlock {
+        function Get-ADUser {}
+    }
+    $MockupModule | Import-Module -Global
 }
+
+
+
+
     
 Describe "Get-UserWritebackOperations" {
     BeforeAll {
@@ -151,7 +150,7 @@ Describe "Get-UserWritebackOperations" {
                     }
                 )
             }
-        }
+        } 
 
         $Operations = Get-UserWritebackOperations -Verbose -Debug
         # $Operations | ConvertTo-Json | Write-Host -ForegroundColor Yellow
