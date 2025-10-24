@@ -48,14 +48,16 @@ function Complete-UserWritebackOperation {
         elseif ($Operation.Action -eq "Rename-ADObject") {
             $Operation | Show-UserWritebackOperation -Single
             $Parameters = $Operation.Parameters
-            Rename-ADObject -Identity $Operation.Identity @Parameters -Confirm:$false
+            $ADUser = Get-ADUser -Identity $Operation.Identity
+            Rename-ADObject -Identity $ADUser.DistinguishedName @Parameters -Confirm:$false
 
             Write-Verbose "Renamed AD object '$($Operation.Identity)' to '$($Operation.Parameters.NewName)'."
         }
         elseif ($Operation.Action -eq "Move-ADObject") {
             $Operation | Show-UserWritebackOperation -Single
             $Parameters = $Operation.Parameters
-            Move-ADObject -Identity $Operation.Identity @Parameters -Confirm:$false
+            $ADUser = Get-ADUser -Identity $Operation.Identity
+            Move-ADObject -Identity $ADUser.DistinguishedName @Parameters -Confirm:$false
 
             Write-Verbose "Moved AD object '$($Operation.Identity)' to '$($Operation.Parameters.TargetPath)'."
         }

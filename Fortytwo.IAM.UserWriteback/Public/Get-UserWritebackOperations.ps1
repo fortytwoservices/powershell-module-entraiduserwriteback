@@ -90,7 +90,7 @@ function Get-UserWritebackOperations {
             $AllCalculatedAttributes = @{
                 path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $Script:DefaultDestinationOU
                 name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
-                sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : (New-Guid).ToString().Substring(0, 18)
+                sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : "NO-FLOW"
                 userPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
                 givenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
                 sn                = $AttributeOverrides.ContainsKey("sn") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sn"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.Surname
@@ -101,11 +101,20 @@ function Get-UserWritebackOperations {
                 title             = $AttributeOverrides.ContainsKey("title") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["title"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.jobTitle
                 mail              = $AttributeOverrides.ContainsKey("mail") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["mail"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.mail
                 city              = $AttributeOverrides.ContainsKey("city") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["city"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.city
-                manager           = if ($EntraIDUser.manager.onPremisesDistinguishedName -and $ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) { $EntraIDUser.manager.onPremisesDistinguishedName } else { $null }
+                manager           = $null
                 office            = $AttributeOverrides.ContainsKey("office") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["office"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.officeLocation
                 enabled           = $EntraIDUser.accountEnabled ?? $false
                 employeeType      = $AttributeOverrides.ContainsKey("employeeType") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeType"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeType
                 employeeId        = $AttributeOverrides.ContainsKey("employeeId") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["employeeId"] -ArgumentList $EntraIDUser, $null) : $EntraIDUser.employeeId
+            }
+
+            if ($EntraIDUser.manager.onPremisesDistinguishedName) {
+                if($ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) {
+                    Write-Debug "Resolved manager '$($EntraIDUser.manager.onPremisesDistinguishedName)' for user '$($EntraIDUser.userPrincipalName)' in AD."
+                    $AllCalculatedAttributes["manager"] = $EntraIDUser.manager.onPremisesDistinguishedName
+                } else {
+                    Write-Warning "Manager '$($EntraIDUser.manager.onPremisesDistinguishedName)' of user '$($EntraIDUser.userPrincipalName)' not found in Active Directory. Skipping manager assignment."
+                }
             }
 
             if (!$Script:DisableExtensionAttributeMapping) {
@@ -132,9 +141,9 @@ function Get-UserWritebackOperations {
             }
             else {
                 $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
-                if ($Name -cne $ADUser.Name) {
+                if ($Name -cne $ADUser.Name -and $Name -ne "NO-FLOW") {
                     Write-Verbose "Attribute 'Name' differs between Entra ID user and AD user. Entra ID value: '$Name', AD value: '$($ADUser.Name)'. This attribute will be updated in Active Directory."
-                    New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.DistinguishedName -Parameters @{
+                    New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
                         NewName = $Name
                     }
                 }
@@ -142,11 +151,11 @@ function Get-UserWritebackOperations {
                     Write-Debug "Attribute 'Name' is the same between Entra ID user and AD user. Value: '$Name'."
                 }
 
-                $Path = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                $Path = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $Script:DefaultDestinationOU
                 $CurrentPath = "OU={0}" -f ($ADUser.DistinguishedName -split "OU=", 2)[1]
-                if ($Path -ne $CurrentPath) {
-                    Write-Verbose "The path differs AD and the calculated value. The object will be moved."
-                    New-UserWritebackOperation -Action Move-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.DistinguishedName -Parameters @{
+                if ($Path -ne $CurrentPath -and $Path -ne "NO-FLOW") {
+                    Write-Verbose "The path differs between AD and the calculated value. The object will be moved."
+                    New-UserWritebackOperation -Action Move-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
                         TargetPath = $Path
                     }
                 }
