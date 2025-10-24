@@ -1,17 +1,18 @@
+
+function Get-ADUser {
+    Param(
+        $Filter,
+        $Identity,
+        $Properties
+    )
+
+    return
+}
+
 BeforeAll {
     Install-Module EntraIDAccessToken -Force -Scope CurrentUser
     Add-EntraIDExternalAccessTokenProfile -AccessToken "dummy"
-    $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru
-    
-    function Get-ADUser {
-        Param(
-            $Filter,
-            $Identity,
-            $Properties
-        )
-
-        return
-    }
+    $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru    
 }
     
 Describe "Get-UserWritebackOperations" {
