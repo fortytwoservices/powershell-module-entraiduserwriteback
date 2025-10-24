@@ -3,6 +3,15 @@ BeforeAll {
     Add-EntraIDExternalAccessTokenProfile -AccessToken "dummy"
     $Script:Module = Import-Module "$PSScriptRoot/../" -Force -PassThru
     
+    function Get-ADUser {
+        Param(
+            $Filter,
+            $Identity,
+            $Properties
+        )
+
+        return
+    }
 }
     
 Describe "Get-UserWritebackOperations" {
