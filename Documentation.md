@@ -89,8 +89,8 @@ Connects the UserWriteback module to Entra ID and Active Directory.
 
 ```
 Connect-UserWriteback [-GroupObjectId] <String> [-DefaultDestinationOU] <String>
- [[-AccessTokenProfile] <String>] [-DisableExtensionAttributeMapping] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+ [[-AccessTokenProfile] <String>] [-DisableExtensionAttributeMapping] [-SkipAllTests]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### DESCRIPTION
@@ -170,6 +170,22 @@ Accept wildcard characters: False
 #### -DisableExtensionAttributeMapping
 Disable extensionAttribute1-15 mapping from Entra ID to Active Directory.
 Useful if these attributes are not available in the on-premises AD schema.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+#### -SkipAllTests
+Skip all tests during connection.
+Not recommended, useful for pester testing
 
 ```yaml
 Type: SwitchParameter

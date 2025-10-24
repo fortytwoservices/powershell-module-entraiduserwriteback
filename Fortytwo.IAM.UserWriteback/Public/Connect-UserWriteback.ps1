@@ -40,7 +40,11 @@ function Connect-UserWriteback {
 
         # Disable extensionAttribute1-15 mapping from Entra ID to Active Directory. Useful if these attributes are not available in the on-premises AD schema.
         [Parameter(Mandatory = $false)]
-        [Switch] $DisableExtensionAttributeMapping
+        [Switch] $DisableExtensionAttributeMapping,
+
+        # Skip all tests during connection. Not recommended, useful for pester testing
+        [Parameter(Mandatory = $false)]
+        [Switch] $SkipAllTests
     )
 
     Process {
@@ -48,6 +52,11 @@ function Connect-UserWriteback {
         $Script:GroupObjectId = $GroupObjectId
         $Script:DefaultDestinationOU = $DefaultDestinationOU
         $Script:DisableExtensionAttributeMapping = $DisableExtensionAttributeMapping.IsPresent ?? $true
+
+        if($SkipAllTests.IsPresent) {
+            Write-Warning "⚠️ Skipping all connection tests. Proceed with caution!"
+            return
+        }
 
         if (!(Get-EntraIDAccessToken | Get-EntraIDAccessTokenHasRoles -Roles "user.read.all", "user.readwrite.all" -Any)) {
             Write-Warning "The access token profile '$AccessTokenProfile' does not have the required role 'user.read.all' or 'user.readwrite.all'. Please ensure the profile is correct and has the necessary permissions."        
