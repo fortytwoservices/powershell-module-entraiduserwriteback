@@ -1,4 +1,4 @@
-<#
+﻿<#
 .DESCRIPTION
     Connects the UserWriteback module to Entra ID and Active Directory.
 

@@ -1,0 +1,22 @@
+[
+    {
+        "RuleName": "PSUseOutputTypeCorrectly",
+        "ScriptName": "Get-UserWritebackOperations.ps1",
+        "Line": 25
+    },
+    {
+        "RuleName": "PSUseSingularNouns",
+        "ScriptName": "Get-UserWritebackOperations.ps1",
+        "Line": 1
+    },
+    {
+        "RuleName": "PSAvoidUsingConvertToSecureStringWithPlainText",
+        "ScriptName": "Complete-UserWritebackOperation.ps1",
+        "Line": 12
+    },
+    {
+        "RuleName": "PSUseShouldProcessForStateChangingFunctions",
+        "ScriptName": "New-UserWritebackOperation.ps1",
+        "Line": 1
+    }
+]
