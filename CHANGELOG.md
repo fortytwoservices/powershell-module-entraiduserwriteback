@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.2.0...v1.3.0) (2025-11-06)
+
+
+### Features
+
+* Add pester tests ([f7fb265](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/f7fb2655fc1f35b22c660fcbf661844e9a2e2290))
+* Add pester tests ([a400e9a](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/a400e9abdb4028a1ff7f1a78f5741898653c23c4))
+
+
+### Bug Fixes
+
+* Mock get-aduser ([f05fbb3](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/f05fbb32c7d41f53962552235fabfdca63fce6fc))
+* PS Script analyzer results ([636699f](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/636699f0f391600137d4f68ed76b0dd499b5363c))
+
 ## [1.2.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.1.1...v1.2.0) (2025-10-20)
 
 
