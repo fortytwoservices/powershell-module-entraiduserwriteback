@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.0...v1.3.1) (2025-11-10)
+
+
+### Bug Fixes
+
+* get correct profile when verifying roles, formatting ([e472850](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/e4728502ae8edd07bdb7e95d150a283a2ae7eddb))
+* get correct profile when verifying roles, formatting ([c24ccdc](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/c24ccdc2277d8f46cfec4cb5a1977699ace95921))
+
 ## [1.3.0](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.2.0...v1.3.0) (2025-11-06)
 
 
