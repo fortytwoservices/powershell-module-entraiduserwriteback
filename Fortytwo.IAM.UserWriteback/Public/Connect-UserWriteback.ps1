@@ -53,30 +53,33 @@ function Connect-UserWriteback {
         $Script:DefaultDestinationOU = $DefaultDestinationOU
         $Script:DisableExtensionAttributeMapping = $DisableExtensionAttributeMapping.IsPresent ?? $true
 
-        if($SkipAllTests.IsPresent) {
+        if ($SkipAllTests.IsPresent) {
             Write-Warning "⚠️ Skipping all connection tests. Proceed with caution!"
             return
         }
 
-        if (!(Get-EntraIDAccessToken | Get-EntraIDAccessTokenHasRoles -Roles "user.read.all", "user.readwrite.all" -Any)) {
-            Write-Warning "The access token profile '$AccessTokenProfile' does not have the required role 'user.read.all' or 'user.readwrite.all'. Please ensure the profile is correct and has the necessary permissions."        
-        } else {
-            Write-Verbose "✅ The access token profile '$AccessTokenProfile' has the required role 'user.read.all' or 'user.readwrite.all'."
+        if (!(Get-EntraIDAccessToken -Profile $AccessTokenProfile | Get-EntraIDAccessTokenHasRoles -Roles "user.read.all", "User.ReadWrite.All" -Any)) {
+            Write-Warning "The access token profile '$AccessTokenProfile' does not have the required role 'user.read.all' or 'User.ReadWrite.All'. Please ensure the profile is correct and has the necessary permissions."        
+        }
+        else {
+            Write-Verbose "✅ The access token profile '$AccessTokenProfile' has the required role 'user.read.all' or 'User.ReadWrite.All'."
         }
 
         # Verify that we can read the group from Entra ID
         $Group = Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/groups/$GroupObjectId" -Method Get -Headers (Get-EntraIDAccessTokenHeader -Profile $AccessTokenProfile) -Verbose:$false
 
-        if(!$Group.id) {
+        if (!$Group.id) {
             throw "Could not find group with object ID '$GroupObjectId' in Entra ID. Please verify the GroupObjectId parameter."
-        } else {
+        }
+        else {
             Write-Verbose "✅ Found group '$($Group.displayName)' with object ID '$GroupObjectId' in Entra ID."
         }
 
         # Verify that the default OU exists in Active Directory
-        if(-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$DefaultDestinationOU'" -ErrorAction SilentlyContinue)) {
+        if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$DefaultDestinationOU'" -ErrorAction SilentlyContinue)) {
             throw "The specified DefaultDestinationOU '$DefaultDestinationOU' does not exist in Active Directory. Please verify the DefaultDestinationOU parameter."
-        } else {
+        }
+        else {
             Write-Verbose "✅ OU '$DefaultDestinationOU' exists in Active Directory."
         }
     }
