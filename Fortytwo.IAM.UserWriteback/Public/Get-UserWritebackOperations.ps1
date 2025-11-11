@@ -143,6 +143,11 @@ function Get-UserWritebackOperations {
                         $Parameters.OtherAttributes[$_.Key] = $_.Value
                     }
                 }
+
+                if (-not $Parameters.ContainsKey("path") -or "NO-FLOW" -eq $Parameters["path"]) {
+                    $Parameters["path"] = $Script:DefaultDestinationOU
+                }
+
                 New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters $Parameters
             }
             else {
