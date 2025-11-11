@@ -203,9 +203,9 @@ Describe "Get-UserWritebackOperations" {
         $Operation.Parameters.replace.employeetype | Should -Be "Full-Time"
     }
 
-    It "Should have a planned operation for renaming jdoe's cn to the upn of the user" {
+    It "Should have a planned operation for renaming jdoe's cn to the part of the upn before the @ of the user" {
         $Operation = $Operations | Where-Object Action -eq "Rename-ADObject" | Where-Object Identity -eq "S-1-5-21-3623811015-3361044348-30300820-1013"
-        $Operation.Parameters.NewName | Should -Be "jdoe@example.com"
+        $Operation.Parameters.NewName | Should -Be "jdoe"
     }
 
     It "Should have a planned operation for moving jdoe to the default OU" {
