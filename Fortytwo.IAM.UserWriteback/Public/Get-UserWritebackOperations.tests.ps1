@@ -205,7 +205,7 @@ Describe "Get-UserWritebackOperations" {
 
     It "Should have a planned operation for renaming jdoe's cn to the part of the upn before the @ of the user" {
         $Operation = $Operations | Where-Object Action -eq "Rename-ADObject" | Where-Object Identity -eq "S-1-5-21-3623811015-3361044348-30300820-1013"
-        $Operation.Parameters.NewName | Should -Be "jdoe"
+        $Operation.Parameters.NewName | Should -Be "John Doe (8cc09d76)"
     }
 
     It "Should have a planned operation for moving jdoe to the default OU" {
