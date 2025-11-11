@@ -1,5 +1,9 @@
 # Inspiration: https://github.com/RamblingCookieMonster/PSStackExchange/blob/master/PSStackExchange/PSStackExchange.psm1
 
+# To be able to override default server and credential parameters in cmdlets like Get-ADUser, we need to
+# preserve the global PSDefaultParameterValues and re-apply them to the script scope.
+$script:PSDefaultParameterValues = $global:PSDefaultParameterValues
+
 New-Variable -Scope Script -Name AccessTokenProfile -Value "default"
 New-Variable -Scope Script -Name DefaultDestinationOU -Value $null
 
