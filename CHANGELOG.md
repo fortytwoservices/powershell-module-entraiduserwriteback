@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.2](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.1...v1.3.2) (2025-11-11)
+
+
+### Bug Fixes
+
+* handle enabled/disabled users ([0fc09d8](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/0fc09d8d4851b2ff87e312c2be6c7c48dc9759e9))
+* improve replace for name ([7e1a058](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/7e1a058638a0fd384d9c2271c4c99923a962ee82))
+* misc from testing ([dbddf60](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/dbddf60d8a6ba7d01d1f2eff8903ae7d40c7dfa7))
+* skip null values in otherAttributes (as its not allowed) and name attribute cannot contain @ character ([b19339f](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/b19339fb2c05d0930431724306531db3f96e196b))
+
 ## [1.3.1](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.0...v1.3.1) (2025-11-10)
 
 
