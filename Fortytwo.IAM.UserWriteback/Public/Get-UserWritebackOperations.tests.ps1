@@ -251,7 +251,7 @@ Describe "Get-UserWritebackOperations" {
         $Operation = $Operations | Where-Object Action -eq "New-ADUser" | Where-Object { $_.EntraIDUser.id -eq "dddabf44-0803-4838-b211-129ad0769c53" }
         $Operation | Should -Not -Be $null
 
-        $Operation.Parameters.SamAccountName | Should -Be $null
+        $Operation.Parameters.SamAccountName | Should -Be "dddabf44-0803-4838-b"
         $Operation.Parameters.UserPrincipalName | Should -Be "bon.jovi@example.com"
     }
 
