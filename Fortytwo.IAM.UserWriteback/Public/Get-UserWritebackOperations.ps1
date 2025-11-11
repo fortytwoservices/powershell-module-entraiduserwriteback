@@ -109,10 +109,11 @@ function Get-UserWritebackOperations {
             }
 
             if ($EntraIDUser.manager.onPremisesDistinguishedName) {
-                if($ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) {
+                if ($ADUsersMap.ContainsKey($EntraIDUser.manager.onPremisesDistinguishedName)) {
                     Write-Debug "Resolved manager '$($EntraIDUser.manager.onPremisesDistinguishedName)' for user '$($EntraIDUser.userPrincipalName)' in AD."
                     $AllCalculatedAttributes["manager"] = $EntraIDUser.manager.onPremisesDistinguishedName
-                } else {
+                }
+                else {
                     Write-Warning "Manager '$($EntraIDUser.manager.onPremisesDistinguishedName)' of user '$($EntraIDUser.userPrincipalName)' not found in Active Directory. Skipping manager assignment."
                 }
             }
@@ -129,7 +130,8 @@ function Get-UserWritebackOperations {
 
                 $Parameters = @{OtherAttributes = @{adminDescription = $adminDescription } }
                 $AllCalculatedAttributes.GetEnumerator() | ForEach-Object {
-                    if ($_.Value -ne "NO-FLOW") {
+                    if ($_.Value -ne "NO-FLOW" -or $_.Key -eq "enabled") {
+                        Write-Debug "Setting attribute '$($_.Key)' for new user to '$($_.Value)'."
                         if ($_.Key -in "path", "name", "sAMAccountName", "userPrincipalName", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
                             $Parameters[$_.Key] = $_.Value
                             return
@@ -141,7 +143,6 @@ function Get-UserWritebackOperations {
                         $Parameters.OtherAttributes[$_.Key] = $_.Value
                     }
                 }
-
                 New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters $Parameters
             }
             else {
@@ -177,7 +178,7 @@ function Get-UserWritebackOperations {
                         return
                     }
 
-                    if ($_.Value -ne "NO-FLOW") {
+                    if ($_.Value -ne "NO-FLOW" -or $_.Key -eq "enabled") {
                         if ($_.Value -ne $ADUser.$Key) {
                             Write-Verbose "Attribute '$Key' differs between the calculated value and the AD user. Calculated value: '$($_.Value)', AD value: '$($ADUser.$Key)'. This attribute will be updated in Active Directory."
                             if ($Key -in "sAMAccountName", "userPrincipalName", "displayName", "mobile", "company", "department", "title", "city", "manager", "office", "enabled") {
