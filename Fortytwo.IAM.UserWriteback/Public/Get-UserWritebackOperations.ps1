@@ -89,7 +89,7 @@ function Get-UserWritebackOperations {
 
             $AllCalculatedAttributes = @{
                 path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $Script:DefaultDestinationOU
-                name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $($EntraIDUser.userPrincipalName.Split("@")[0].replace(".", " "))
                 sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : "NO-FLOW"
                 userPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
                 givenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
@@ -132,6 +132,11 @@ function Get-UserWritebackOperations {
                     if ($_.Value -ne "NO-FLOW") {
                         if ($_.Key -in "path", "name", "sAMAccountName", "userPrincipalName", "displayName", "mobilePhone", "company", "department", "title", "city", "manager", "office", "enabled") {
                             $Parameters[$_.Key] = $_.Value
+                            return
+                        }
+                        if ($null -eq $_.Value) {
+                            Write-Debug "Calculated attribute '$($_.Key)' for new user is null. It will not be set in Active Directory."
+                            return
                         }
                         $Parameters.OtherAttributes[$_.Key] = $_.Value
                     }
@@ -140,7 +145,7 @@ function Get-UserWritebackOperations {
                 New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters $Parameters
             }
             else {
-                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
+                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $($EntraIDUser.userPrincipalName.Split("@")[0].replace(".", " "))
                 if ($Name -cne $ADUser.Name -and $Name -ne "NO-FLOW") {
                     Write-Verbose "Attribute 'Name' differs between Entra ID user and AD user. Entra ID value: '$Name', AD value: '$($ADUser.Name)'. This attribute will be updated in Active Directory."
                     New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
