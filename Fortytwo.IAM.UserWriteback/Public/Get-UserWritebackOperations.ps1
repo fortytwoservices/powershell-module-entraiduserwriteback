@@ -55,7 +55,7 @@ function Get-UserWritebackOperations {
 
         #region Join users from Entra ID and Active Directory and calculate required operations
         $EntraIDUsers | ForEach-Object {
-            $EntraIDUser = $_
+            $EntraIDUser = $_ # $EntraIDUser = $EntraIDUsers | get-random -Count 1
             $ADUser = $null
             $adminDescription = "userwriteback_$($EntraIDUser.id)"
             
@@ -89,7 +89,7 @@ function Get-UserWritebackOperations {
 
             $AllCalculatedAttributes = @{
                 path              = $AttributeOverrides.ContainsKey("path") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["path"] -ArgumentList $EntraIDUser, $ADUser) : $Script:DefaultDestinationOU
-                name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $($EntraIDUser.userPrincipalName.Split("@")[0].replace(".", " "))
+                name              = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : ($EntraIDUser.userPrincipalName.Split("@")[0] -replace '[._-]', ' ')
                 sAMAccountName    = $AttributeOverrides.ContainsKey("sAMAccountName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["sAMAccountName"] -ArgumentList $EntraIDUser, $ADUser) : "NO-FLOW"
                 userPrincipalName = $AttributeOverrides.ContainsKey("userPrincipalName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["userPrincipalName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.UserPrincipalName
                 givenName         = $AttributeOverrides.ContainsKey("givenName") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["givenName"] -ArgumentList $EntraIDUser, $ADUser) : $EntraIDUser.GivenName
@@ -145,7 +145,7 @@ function Get-UserWritebackOperations {
                 New-UserWritebackOperation -Action New-ADUser -EntraIDUser $EntraIDUser -Parameters $Parameters
             }
             else {
-                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : $($EntraIDUser.userPrincipalName.Split("@")[0].replace(".", " "))
+                $Name = $AttributeOverrides.ContainsKey("name") ? (Invoke-Command -NoNewScope -ScriptBlock $AttributeOverrides["name"] -ArgumentList $EntraIDUser, $ADUser) : ($EntraIDUser.userPrincipalName.Split("@")[0] -replace '[._-]', ' ')
                 if ($Name -cne $ADUser.Name -and $Name -ne "NO-FLOW") {
                     Write-Verbose "Attribute 'Name' differs between Entra ID user and AD user. Entra ID value: '$Name', AD value: '$($ADUser.Name)'. This attribute will be updated in Active Directory."
                     New-UserWritebackOperation -Action Rename-ADObject -EntraIDUser $EntraIDUser -ADUser $ADUser -Identity $ADUser.ObjectSID.ToString() -Parameters @{
