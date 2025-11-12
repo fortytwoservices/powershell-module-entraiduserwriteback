@@ -144,6 +144,11 @@ function Get-UserWritebackOperations {
                     }
                 }
 
+                if ($null -eq $Parameters.sAMAccountName) {
+                    $Parameters.SamAccountName = $EntraIDUser.id.Substring(0, 18)
+                    Write-Debug "sAMAccountName was not calculated for new user. Setting attribute 'sAMAccountName' to '$($Parameters.sAMAccountName)'."
+                }
+                
                 if (-not $Parameters.ContainsKey("path") -or "NO-FLOW" -eq $Parameters["path"]) {
                     $Parameters["path"] = $Script:DefaultDestinationOU
                 }
