@@ -145,7 +145,7 @@ function Get-UserWritebackOperations {
                 }
 
                 if ($null -eq $Parameters.sAMAccountName) {
-                    $Parameters.SamAccountName = $EntraIDUser.id.Substring(0, [Math]::Min(20, $EntraIDUser.id.Length))
+                    $Parameters.SamAccountName = $EntraIDUser.id.Substring(0, 18)
                     Write-Debug "sAMAccountName was not calculated for new user. Setting attribute 'sAMAccountName' to '$($Parameters.sAMAccountName)'."
                 }
                 
