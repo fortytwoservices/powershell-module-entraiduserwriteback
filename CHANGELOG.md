@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.3](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.2...v1.3.3) (2025-11-12)
+
+
+### Bug Fixes
+
+* Always flow path on create ([3bbb59c](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/3bbb59c9e211a54cf15fd1030f98ffaae37ef03c))
+* Always flow path on create ([e8744cb](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/e8744cb6634a52c62a352857d2db42568179bb77))
+* create a samaccountname on create, if not overridden ([2399a69](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/2399a69086187aa5b182bb0ee3b00f5d924f8093))
+* create a samaccountname on create, if not overridden ([dde2cae](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/dde2caeab3edb7b7ad33a48b9297fdc8450310e5))
+* safer substring length ([780130b](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/780130b01e21e8744ab8eec12b022618811b1bc1))
+
 ## [1.3.2](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.1...v1.3.2) (2025-11-11)
 
 
