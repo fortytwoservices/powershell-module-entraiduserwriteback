@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.4](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.3...v1.3.4) (2025-11-26)
+
+
+### Bug Fixes
+
+* dont error out if the entraid groups are empty. ([2e1bc2a](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/2e1bc2a5a542240ba7065b8912497b4cc107cfba))
+* dont error out if the entraid groups are empty. ([dcea1dc](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/dcea1dce2eb14bfa34d814a9220da819fd666ac7))
+* return empty array if no operations ([394cbcb](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/394cbcba9141d050b01a92c186c55acac3aff875))
+
 ## [1.3.3](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.2...v1.3.3) (2025-11-12)
 
 
