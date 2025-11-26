@@ -262,5 +262,8 @@ function Get-UserWritebackOperations {
             }
         }
         #endregion
+
+        # Return empty array if there is no operations
+        return @()
     }
 }
