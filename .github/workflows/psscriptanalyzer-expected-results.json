@@ -2,7 +2,7 @@
     {
         "RuleName": "PSUseOutputTypeCorrectly",
         "ScriptName": "Get-UserWritebackOperations.ps1",
-        "Line": 25
+        "Line": 267
     },
     {
         "RuleName": "PSUseSingularNouns",
