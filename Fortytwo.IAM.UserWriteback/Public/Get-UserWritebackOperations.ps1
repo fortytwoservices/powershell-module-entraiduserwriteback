@@ -20,11 +20,6 @@ function Get-UserWritebackOperations {
             $Uri = $Response.'@odata.nextLink'
         } while ($Uri)
 
-        if (!$EntraIDUsers) {
-            Write-Error "No users found in group with object ID '$Script:GroupObjectId' in Entra ID."
-            return @()
-        }
-
         Write-Verbose "Found $($EntraIDUsers.Count) users in group with object ID '$Script:GroupObjectId'."
         #endregion
 
