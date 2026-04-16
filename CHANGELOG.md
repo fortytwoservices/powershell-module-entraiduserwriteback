@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.5](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.4...v1.3.5) (2026-04-16)
+
+
+### Bug Fixes
+
+* Merge pull request [#61](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/issues/61) from fortytwoservices/grept-apply-1776347602 ([f1fe25a](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/commit/f1fe25afa518490b9dfd31d365ee967ee36f478c))
+
 ## [1.3.4](https://github.com/fortytwoservices/powershell-module-entraiduserwriteback/compare/v1.3.3...v1.3.4) (2025-11-26)
 
 
